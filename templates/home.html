@@ -1,0 +1,70 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <title>DormForm</title>
+    <link type="text/css" rel="stylesheet" href="../static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+<body>
+
+    <header>
+        <h1><a href="/">DormForm</a></h1>
+        <button type="button" id="newRev">Leave a Review</button>
+        <button type="button" id="editRev">Edit Review</button>
+    </header>
+
+    <div class="grid"></div>
+
+    <div id="sidebar"></div>
+
+    <script>
+
+        function scrollbarWidth() {
+            var div = $('<div style="width:50px;height:50px;overflow:hidden;position:absolute;top:-200px;left:-200px;"><div style="height:100px;"></div>');
+            // Append our div, do our calculation and then remove it
+            $('body').append(div);
+            var w1 = $('div', div).innerWidth();
+            div.css('overflow-y', 'scroll');
+            var w2 = $('div', div).innerWidth();
+            $(div).remove();
+            return (w1 - w2);
+        }
+
+        //set width of grid area
+        $('.grid').width($(window).width()-270-scrollbarWidth());
+
+        function createThumbNail(){
+            var thumbNail = $('<div>').addClass('thumbNail');
+            //get width of each thumbNail
+            var width =($('.grid').width()-15*5-8)/4; //(grid_width-thumbNail_margin*numDiv+1)/numDiv
+            thumbNail.width(width);
+            thumbNail.height(width*5/4);
+            //add image
+            var imgContainer = $('<div>').addClass('imgContainer'); //need to hide image overflow
+            var img = $('<img>').attr('src','../static/room_example.jpeg');
+            imgContainer.height(width);
+            img.height(width); //only works for landscape images
+            img.on('load', function(){ //center image within container
+              console.log($(this).width());
+              img.css('left',-(img.width()-width)/2);  //only works for landscape images
+            });
+            imgContainer.append(img);
+            thumbNail.append(imgContainer);
+
+            //add room title
+            var title = $('<a>').attr('href','https://twitter.com/')
+                                .text('Stone 423');
+            thumbNail.append(title);
+            return thumbNail;
+        }
+
+        //Create thumbnails for each room
+        for(i=0; i<10; i++) {
+            $('.grid').append(createThumbNail());
+        }
+
+    </script>
+</body>
+</html>
