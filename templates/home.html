@@ -9,11 +9,15 @@
 </head>
 <body>
 
+    {% block header %}
     <header>
         <h1><a href="/">DormForm</a></h1>
         <button type="button" id="newRev">Leave a Review</button>
         <button type="button" id="editRev">Edit Review</button>
     </header>
+    {% endblock %}
+
+    {% block page_content %}
 
     <div class="grid"></div>
 
@@ -66,5 +70,8 @@
         }
 
     </script>
+
+    {% endblock %}
+
 </body>
 </html>
