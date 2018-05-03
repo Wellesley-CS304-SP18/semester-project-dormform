@@ -12,13 +12,12 @@
     {% block header %}
     <header>
         <h1><a href="/">DormForm</a></h1>
-        <button type="button" id="newRev">Leave a Review</button>
-        <button type="button" id="editRev">Edit Review</button>
+        <button type="button" onclick="window.location.href='https://www.google.com/'">Leave a Review</button>
+        <button type="button">Edit Review</button>
     </header>
     {% endblock %}
 
     {% block page_content %}
-
     <div class="grid"></div>
 
     <div id="sidebar"></div>
@@ -39,7 +38,7 @@
         //set width of grid area
         $('.grid').width($(window).width()-270-scrollbarWidth());
 
-        function createThumbNail(){
+        function createThumbNail(building, roomNum){
             var thumbNail = $('<div>').addClass('thumbNail');
             //get width of each thumbNail
             var width =($('.grid').width()-15*5-8)/4; //(grid_width-thumbNail_margin*numDiv+1)/numDiv
@@ -59,18 +58,18 @@
 
             //add room title
             var title = $('<a>').attr('href','https://twitter.com/')
-                                .text('Stone 423');
+                                .text(building + ' ' + roomNum);
             thumbNail.append(title);
             return thumbNail;
         }
 
         //Create thumbnails for each room
-        for(i=0; i<10; i++) {
-            $('.grid').append(createThumbNail());
-        }
+        {% for room in roomsData %}
+            //For some reason room.building registers as a variable
+            $('.grid').append(createThumbNail({{room.roomNum}},{{room.roomNum}}));
+        {% endfor %}
 
     </script>
-
     {% endblock %}
 
 </body>

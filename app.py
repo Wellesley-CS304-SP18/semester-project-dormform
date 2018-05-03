@@ -4,7 +4,7 @@ from werkzeug import secure_filename
 app = Flask(__name__)
 
 import sys,os,random
-
+import MySQLdb
 import dbconn2
 
 app.secret_key = 'your secret here'
@@ -18,9 +18,16 @@ app.secret_key = ''.join([ random.choice(('ABCDEFGHIJKLMNOPQRSTUVXYZ' +
 app.config['TRAP_BAD_REQUEST_ERRORS'] = True
 
 
-@app.route('/')
-def lookup():
-    return render_template('home.html')
+@app.route('/', methods=['GET', 'POST'])
+def search():
+        #display all the rooms on the home page
+        if request.method=='GET':
+            conn = dbconn2.connect(DSN)
+            curs = conn.cursor(MySQLdb.cursors.DictCursor)
+            curs.execute('SELECT building, roomNum FROM room')
+            roomsData = curs.fetchall()
+            return render_template('home.html', roomsData = roomsData)
+
 
 # This route processes the form; it's not intended for users
 # @app.route('/search/', methods=['GET','POST'])
