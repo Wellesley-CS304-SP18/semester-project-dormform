@@ -17,8 +17,8 @@ home.html
     {% block header %}
     <header>
         <h1><a href="/">DormForm</a></h1>
-        <button type="button" onclick="window.location.href={{url_for('newReview')}}">Leave a Review</button>
-        <button type="button" onclick="window.location.href={{url_for('editReview')}}">Edit Review</button>
+        <a href="{{url_for('newReview')}}"><button type="button">Leave a Review</button></a>
+        <a href="{{url_for('editReview')}}"><button type="button">Edit Review</button></a>
     </header>
     {% endblock %}
 
