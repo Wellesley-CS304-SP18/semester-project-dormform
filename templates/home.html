@@ -1,6 +1,6 @@
-<!-- 
+<!--
 CS304 Final Project: Dorm Form
-Midori Yang, Lauren Futami and Brenda Ji 
+Midori Yang, Lauren Futami and Brenda Ji
 home.html
 -->
 <!doctype html>
@@ -18,7 +18,7 @@ home.html
     <header>
         <h1><a href="/">DormForm</a></h1>
         <button type="button" onclick="window.location.href={{url_for('newReview')}}">Leave a Review</button>
-        <!--<button type="button">Edit Review</button> will be implemented in alpha-->
+        <button type="button" onclick="window.location.href={{url_for('editReview')}}">Edit Review</button>
     </header>
     {% endblock %}
 
@@ -43,7 +43,7 @@ home.html
         //set width of grid area
         $('.grid').width($(window).width()-270-scrollbarWidth());
 
-        function createThumbNail(roomID){
+        function createThumbNail(roomID,url){
             console.log(roomID)
             var thumbNail = $('<div>').addClass('thumbNail');
             //get width of each thumbNail
@@ -63,17 +63,15 @@ home.html
             thumbNail.append(imgContainer);
 
             //add room title
-            var url = "{{url_for('room', roomID="+roomID+")}}";
             var title = $('<a>').attr('href',url)
                                 .text(roomID);
-            console.log($('<a>'));
             thumbNail.append(title);
             return thumbNail;
         }
 
         //Create thumbnails for each room
         {% for room in roomsData %}
-            $('.grid').append(createThumbNail("{{room.roomID}}"));
+            $('.grid').append(createThumbNail("{{room.roomID}}", "{{url_for('room', roomID=room.roomID)}}"));
         {% endfor %}
 
     </script>
