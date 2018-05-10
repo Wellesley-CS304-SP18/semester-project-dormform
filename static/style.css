@@ -1,3 +1,9 @@
+/*
+CS304 Final Project: DormForm
+Midori Yang, Lauren Futami, and Brenda Ji
+style.css
+*/
+
 body{
     padding: 0;
     margin: 0;
@@ -99,4 +105,8 @@ header button:hover{
 
 .thumbNail a:hover{
     color: #999999;
+}
+
+#wrapper {
+    margin-top: 70px;
 }

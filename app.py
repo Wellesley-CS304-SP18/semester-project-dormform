@@ -1,11 +1,18 @@
-from flask import (Flask, render_template, make_response, url_for, request,
-                   redirect, flash, session, send_from_directory)
-from werkzeug import secure_filename
-app = Flask(__name__)
+'''
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji 
+home.py
+'''
 
-import sys,os,random
+#!/usr/local/bin/python2.7
+
+import os, sys, random
 import MySQLdb
 import dbconn2
+import functions
+
+from flask import Flask, render_template, make_response, request, redirect, url_for, session, send_from_directory, flash, jsonify
+app = Flask(__name__)
 
 app.secret_key = 'your secret here'
 # replace that with a random key
@@ -14,83 +21,107 @@ app.secret_key = ''.join([ random.choice(('ABCDEFGHIJKLMNOPQRSTUVXYZ' +
                                           '0123456789'))
                            for i in range(20) ])
 
+
 # This gets us better error messages for certain common request errors
 app.config['TRAP_BAD_REQUEST_ERRORS'] = True
 
-
 @app.route('/', methods=['GET', 'POST'])
-def search():
-        #display all the rooms on the home page
-        if request.method=='GET':
-            conn = dbconn2.connect(DSN)
-            curs = conn.cursor(MySQLdb.cursors.DictCursor)
-            curs.execute('SELECT building, roomNum FROM room')
-            roomsData = curs.fetchall()
-            return render_template('home.html', roomsData = roomsData)
+def home():
+    #display all the rooms on the home page
+    if request.method=='GET':
+        conn = dbconn2.connect(DSN)
+        curs = conn.cursor(MySQLdb.cursors.DictCursor)
+        curs.execute('SELECT roomID FROM room')
+        roomsData = curs.fetchall()
+        return render_template('home.html', roomsData = roomsData)
 
+@app.route('/newReview/', methods=["GET", "POST"])
+def newReview():
+    conn = dbconn2.connect(DSN)
+    username = 'bji'
+    roomIDs = functions.getRoomNums(conn);
+    if username is not None:
+        if request.method == "GET":
+            return render_template('reviewForm.html', roomIDs = roomIDs)
+        else: # POST
+            chosenRoomID = request.form['roomIDs']
+            flooring = request.form['flooring']
+            review = request.form['review']
+            rating = request.form['overallRating']
+            firstReview = functions.checkFirstReview(conn, username, chosenRoomID)
+            if len(firstReview) == 0: # Leave a new review
+                functions.newReview(conn, username, chosenRoomID, review, rating, flooring)
+                flash("Thanks for your review!")
+            else: # Need to edit a review --> not sure how to do this yet.
+                # oldReview = functions.getOldReview(conn, username, roomID)
+                # prevReview = oldReview['review']
+                # return(conn, roomID)
+                flash("You have already reviewed this room. Please choose another room to review.")
+            return render_template('reviewForm.html', roomIDs=roomIDs)
+    else: # if there's no username found yet, logins not implemented yet
+        flash("No userid; please login first.")
+        return render_template('login.html')
 
-# This route processes the form; it's not intended for users
-# @app.route('/search/', methods=['GET','POST'])
-# def search():
-#     #requests the inputs
-#     if request.method == 'POST':
-#     	title = request.form[('search-title')]
-#     	conn = dbconn2.connect(DSN)
-#     	movie = searchTitle(conn,title)
-#     	if movie != None:
-#         	tt = movie['tt']
-#         	return redirect(url_for('update',tt = tt))
-#     	flash("Movie does not exist.")
-#     return render_template('search.html')
-#
-# @app.route('/select/', methods=['GET','POST'])
-# def select():
+@app.route('/room/<roomID>', methods=["GET", "POST"])
+def room(roomID):
+    conn = dbconn2.connect(DSN)
+    # if GET
+    # just post all of the reviews for DAV265
+    if request.method == "GET":
+        reviews = functions.getRoomReviews(conn, roomID)
+        return render_template('room.html',roomID=roomID,reviews=reviews)
+
+    # if POST
+    # find the reviews for the room and display them
+    else:
+    	reviews = functions.getRoomReviews(conn, roomID)
+    	return render_template('room.html',roomID=roomID,reviews=reviews)
+
+# Displays reviews that a user has already made 
+@app.route('/editReview/', methods=["GET", "POST"])
+def editReview():
+    conn = dbconn2.connect(DSN)
+    # username = request.cookies.get('username')
+    username = 'bji'
+    print username
+    if username is not None: 
+        reviews = functions.getUserRoomReviews(conn, username)
+        return render_template('reviewedRooms.html', reviews=reviews)
+
+    else: # if there's no username found yet 
+        flash("No userid; please login first.")
+        return render_template('login.html')
+
+# Displays form for a review on a specific room that the user has already made 
+# @app.route('/editReview/<username>/<roomID>', methods=["GET", "POST"])
+# def editRoom(username, roomID, building, roomNum, review):
 #     conn = dbconn2.connect(DSN)
-#     if request.method == 'POST':
-#     	tt = request.form[('menu-tt')]
-#         return redirect(url_for('update',tt = tt))
-#     movies = getIncomplete(conn)
-#     return render_template('select.html', movies = movies)
-#
-# @app.route('/update/<tt>', methods=['GET','POST'])
-# def update(tt):
-# 	conn = dbconn2.connect(DSN)
-# 	movie = checkTT(conn, tt)
-# 	#getting the right information
-# 	tt = movie['tt']
-# 	title = movie['title']
-# 	release = movie['release']
-# 	director = movie['director']
-# 	addedby = movie['addedby']
-# 	if request.method == 'POST':
-# 		if request.form['submit'] == 'update':
-# 			title = request.form[('movie-title')]
-# 			tt = request.form[('movie-tt')]
-# 			release = request.form[('movie-release')]
-# 			director = request.form[('movie-director')]
-# 			addedby = request.form[('movie-addedby')]
-# 			desc = updateDB(conn, title, tt, release, director, addedby)
-# 			flash(desc)
-# 			return render_template('update.html', title = title, tt = tt, release = release, director = director, addedby = addedby, desc = desc)
-#
-# 		if request.form['submit'] == 'delete':
-# 			desc = delete(conn,title)
-# 			flash(desc)
-# 			return render_template('home.html')
-# 	return render_template('update.html', title = title, tt = tt, release = release, director = director, addedby = addedby, desc = '')
+#     # username = request.cookies.get('username')
+#     username = 'bji'
+#     print username
+#     if username is not None: 
+#         if request.method == "GET":
+#             print("get method!")
+#             return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
 
-
-
+#         else: # POST
+#             print("post method!")
+#             return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
+#     else: # if there's no username found yet 
+#         flash("No userid; please login first.")
+#         return render_template('login.html')
 
 if __name__ == '__main__':
-
     if len(sys.argv) > 1:
         # arg, if any, is the desired port number
         port = int(sys.argv[1])
         assert(port>1024)
     else:
         port = os.getuid()
+
     DSN = dbconn2.read_cnf()
     DSN['db'] = 'dormform_db'
     app.debug = True
     app.run('0.0.0.0',port)
+    app.debug = True
+    app.run('0.0.0.0',os.getuid()+1)

@@ -1,3 +1,8 @@
+<!-- 
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji 
+home.html
+-->
 <!doctype html>
 <head>
     <meta charset="utf-8">
@@ -12,8 +17,8 @@
     {% block header %}
     <header>
         <h1><a href="/">DormForm</a></h1>
-        <button type="button" onclick="window.location.href='https://www.google.com/'">Leave a Review</button>
-        <button type="button">Edit Review</button>
+        <button type="button" onclick="window.location.href={{url_for('newReview')}}">Leave a Review</button>
+        <!--<button type="button">Edit Review</button> will be implemented in alpha-->
     </header>
     {% endblock %}
 
@@ -38,7 +43,8 @@
         //set width of grid area
         $('.grid').width($(window).width()-270-scrollbarWidth());
 
-        function createThumbNail(building, roomNum){
+        function createThumbNail(roomID){
+            console.log(roomID)
             var thumbNail = $('<div>').addClass('thumbNail');
             //get width of each thumbNail
             var width =($('.grid').width()-15*5-8)/4; //(grid_width-thumbNail_margin*numDiv+1)/numDiv
@@ -57,16 +63,17 @@
             thumbNail.append(imgContainer);
 
             //add room title
-            var title = $('<a>').attr('href','https://twitter.com/')
-                                .text(building + ' ' + roomNum);
+            var url = "{{url_for('room', roomID="+roomID+")}}";
+            var title = $('<a>').attr('href',url)
+                                .text(roomID);
+            console.log($('<a>'));
             thumbNail.append(title);
             return thumbNail;
         }
 
         //Create thumbnails for each room
         {% for room in roomsData %}
-            //For some reason room.building registers as a variable
-            $('.grid').append(createThumbNail({{room.roomNum}},{{room.roomNum}}));
+            $('.grid').append(createThumbNail("{{room.roomID}}"));
         {% endfor %}
 
     </script>

@@ -1,0 +1,67 @@
+<!-- 
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji  
+reviewForm.html
+-->
+{% extends "home.html" %}
+
+{% block page_content %}
+
+<div id="wrapper">
+
+    <p> A form for writing reviews for dorms at Wellesley College
+        <div id="content">
+            <form method="POST" action="/newReview/">
+                <label for="reshalls">Residence Halls (will be implemented later!!)</label>
+                <!--         <select name="reshalls" id="reshallsdropdown">
+                <option value="none" selected = "selected">Choose One</option>
+                {% for reshall in reshalls %}
+                <option value = "{{reshall}}" SELECTED>{{reshall}}</option>
+                {% endfor %}
+            </select> -->
+            <p>
+                <label for="roomIDs">Available Rooms So Far</label>
+                <select name="roomIDs">
+                    <option value="none" selected = "selected">Choose One</option>
+                    {% for room in roomIDs %}
+                    <option value = {{room['roomID']}} SELECTED>{{room['roomID']}}</option>
+                    {% endfor %}
+                </select>
+
+                <p>
+                    <label for="flooring">Flooring</label>
+                    <select name="flooring">
+                        <option value = "Wood" SELECTED>wood</option>
+                        <option value = "Carpet" SELECTED>carpet</option>
+                        <option value = "Linoleum" SELECTED>linoleum</option>
+                    </select>
+
+                    <p>
+                        <label for="overallRating">Give your room an overall rating:</label>
+
+                        <p>
+                            <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
+                            <input type="radio" name="overallRating" value="2"> 2<br>
+                            <input type="radio" name="overallRating" value="3"> 3<br>
+                            <input type="radio" name="overallRating" value="4"> 4<br>
+                            <input type="radio" name="overallRating" value="5"> 5
+
+                            <p>Review: <br><textarea name="review" rows="5" cols="30"></textarea>
+
+
+                                <p><input type="submit" name="submit-btn" value="Submit Review">
+                                </form>
+                            </div>
+                        </div>
+                        <div id="flashes">
+                            {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                            <ul style="list-style-type: none; color:red", class=flashes>
+                                {% for message in messages %}
+                                <li>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+{% endblock %}

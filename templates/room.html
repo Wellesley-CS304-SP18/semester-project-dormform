@@ -1,0 +1,43 @@
+<!-- 
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji  
+room.html
+-->
+
+{% extends 'home.html' %}
+
+	{% block page_content %}
+	<div id="room">
+		<h1>{{roomID}} Room Review</h1>
+	</div>
+
+    <div id="sidebar"></div>
+    <div id="content">
+
+        <div id="flashes">
+
+            {% with messages = get_flashed_messages() %}
+          {% if messages %}
+          <ul style="list-style-type: none; color:red", class=flashes>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        {% endwith %}
+        </div>
+  <section id="room_review">
+      <table id="room_review_table">
+          <tr><th>Review</th><th>Rating</th><th>Flooring</th></tr>
+          {% for review in reviews %}
+          <tr class="review_row">
+    	  <td class="review">{{review['review']}}</td>
+    	  <td class="rating">{{review['overallRating']}}</td>
+    	  <td class="flooring">{{review['flooring']}}</td>
+          </tr>
+    	  {% endfor %}
+      </table>
+  </section>
+    </div>
+
+	{% endblock %}
