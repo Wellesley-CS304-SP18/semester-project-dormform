@@ -67,12 +67,50 @@ header button:hover{
     position: fixed;
     top: 70px;
     right: 0;
+    font-family: 'Nunito', sans-serif;
+}
+#sidebar *:not(p){
+    display: block;
+}
+#sidebar h2{
+    text-align: center;
+    color: #fff;
+}
+#sidebar label{
+    color: #fff;
+    margin-left: 20px;
+}
+#sidebar select{
+    width: 230px;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+#sidebar input[type=radio],p{
+    color: #fff;
+}
+#sidebar #radios{
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+#sidebar input[type=submit]{
+    background-color:#000;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    color: #fff;
+    padding: 10px;
+    float: center;
+    font-size: 15px;
+    -webkit-transition: background-color 0.2s ease-in;
+    margin: 0 auto;
+}
+#sidebar input[type=submit]:hover{
+    background-color:#fff;
+    color: #000;
 }
 
 .grid {
     margin-top: 70px;
 }
-
 .grid .thumbNail {
     margin: 0px 0px 15px 15px;
     float: left;
@@ -82,17 +120,14 @@ header button:hover{
     border-radius: 5px;
     border: 1px solid #000;
 }
-
 .imgContainer {
     width: 100%;
     overflow: hidden;
     margin-bottom: 15px;
 }
-
 .imgContainer img{
     position: relative;
 }
-
 .thumbNail a{
     font-family: 'Nunito', sans-serif;
     font-size: 20px;
@@ -102,7 +137,6 @@ header button:hover{
     color 0.1s ease-in;
     margin-left: 15px;
 }
-
 .thumbNail a:hover{
     color: #999999;
 }

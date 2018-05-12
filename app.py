@@ -1,6 +1,6 @@
 '''
 CS304 Final Project: Dorm Form
-Midori Yang, Lauren Futami and Brenda Ji 
+Midori Yang, Lauren Futami and Brenda Ji
 home.py
 '''
 
@@ -77,29 +77,31 @@ def room(roomID):
     	reviews = functions.getRoomReviews(conn, roomID)
     	return render_template('room.html',roomID=roomID,reviews=reviews)
 
-# Displays reviews that a user has already made 
+# Displays reviews that a user has already made
 @app.route('/editReview/', methods=["GET", "POST"])
 def editReview():
     conn = dbconn2.connect(DSN)
     # username = request.cookies.get('username')
     username = 'bji'
     print username
-    if username is not None: 
+    if username is not None:
         reviews = functions.getUserRoomReviews(conn, username)
         return render_template('reviewedRooms.html', reviews=reviews)
 
-    else: # if there's no username found yet 
+    else: # if there's no username found yet
         flash("No userid; please login first.")
         return render_template('login.html')
 
-# Displays form for a review on a specific room that the user has already made 
-# @app.route('/editReview/<username>/<roomID>', methods=["GET", "POST"])
-# def editRoom(username, roomID, building, roomNum, review):
+# Displays form for a review on a specific room that the user has already made
+# @app.route('/editRoom/<roomID>', methods=["GET", "POST"])
+# def editRoom(username, roomID, review):
 #     conn = dbconn2.connect(DSN)
 #     # username = request.cookies.get('username')
 #     username = 'bji'
 #     print username
-#     if username is not None: 
+#     building = functions.getReshall(roomID[:3])
+#     roomNum = roomID[3:6]
+#     if username is not None:
 #         if request.method == "GET":
 #             print("get method!")
 #             return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
@@ -107,9 +109,22 @@ def editReview():
 #         else: # POST
 #             print("post method!")
 #             return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
-#     else: # if there's no username found yet 
+#     else: # if there's no username found yet
 #         flash("No userid; please login first.")
 #         return render_template('login.html')
+
+
+# TESTING editRoom
+@app.route('/editRoom/', methods=["GET", "POST"])
+def editRoom():
+    conn = dbconn2.connect(DSN)
+    # username = request.cookies.get('username')
+    username = 'bji'
+    roomID = 'DAV265'
+    review = 'it was okay'
+    building = functions.getReshall(roomID[:3])
+    roomNum = roomID[3:6]
+    return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -117,11 +132,11 @@ if __name__ == '__main__':
         port = int(sys.argv[1])
         assert(port>1024)
     else:
-        port = os.getuid()
+        port = 8000#os.getuid()
 
     DSN = dbconn2.read_cnf()
     DSN['db'] = 'dormform_db'
     app.debug = True
     app.run('0.0.0.0',port)
-    app.debug = True
-    app.run('0.0.0.0',os.getuid()+1)
+    #app.debug = True
+    #app.run('0.0.0.0',os.getuid()+1)

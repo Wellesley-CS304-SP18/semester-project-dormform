@@ -33,3 +33,17 @@ def getRoomReviews(conn, roomID):
 	curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
 	curs.execute('SELECT * FROM review WHERE roomID=%s',[roomID])
 	return curs.fetchall()
+
+def getUserRoomReviews(conn, username):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT * FROM review WHERE username=%s',[username])
+    return curs.fetchall()
+
+def getReshall(buildingID):
+    buildings = {'BAT':'Bates', 'BEB':'Beebe', 'CAZ':'Cazenove', 'CER':'Cervantes', 
+    'CLA':'Claflin', 'DOW':'Dower', 'FRE':'Freeman', 'FHC':'French House', 'HEM':'Hemlock', 
+    'LAK':'Lake House', 'MCA':'McAfee', 'MUN':'Munger', 'POM':'Pomeroy', 'SEV':'Severance', 
+    'SHA':'Shafer', 'STO':'Stone', 'DAV':'Davis', 'TCE':'Tower Court East', 'TCW':'Tower Court West'}
+    reshall = buildings[buildingID]
+    return reshall 
+

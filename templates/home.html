@@ -18,17 +18,42 @@ home.html
     <header>
         <h1><a href="/">DormForm</a></h1>
         <a href="{{url_for('newReview')}}"><button type="button">Leave a Review</button></a>
-        <a href="{{url_for('editReview')}}"><button type="button">Edit Review</button></a>
+        <a href="{{url_for('editReview')}}"><button type="button">Edit Review</button></a> <!-- rename button? your reviewed rooms/your rooms? -->
     </header>
     {% endblock %}
 
     {% block page_content %}
     <div class="grid"></div>
 
-    <div id="sidebar"></div>
+    <div id="sidebar">
+        <form>
+        <h2>Filter Rooms</h2>
+            <label>Dormitory</label>
+            <select name="dorm">
+                <option value="Davis">Davis</option>
+                <option value="Shafer">Shafer</option>
+            </select>
+            <label>Flooring</label>
+            <select name="flooring">
+                <option value="linoleum">Linoleum</option>
+                <option value="wood">Wood</option>
+                <option value="carpet">Carpet</option>
+            </select>
+            <label>Rating</label>
+            <div id="radios">
+                <input type="radio" name="rating" value="1"><p>1</p>
+                <input type="radio" name="rating" value="2"><p>2</p>
+                <input type="radio" name="rating" value="3"><p>3</p>
+                <input type="radio" name="rating" value="4"><p>4</p>
+                <input type="radio" name="rating" value="5"><p>5</p>
+            </div>
+            <input type="submit">
+        </form>
+    </div>
 
     <script>
 
+        //get the width of the scrollbar as it subtracts from the display area
         function scrollbarWidth() {
             var div = $('<div style="width:50px;height:50px;overflow:hidden;position:absolute;top:-200px;left:-200px;"><div style="height:100px;"></div>');
             // Append our div, do our calculation and then remove it
@@ -47,6 +72,8 @@ home.html
             console.log(roomID)
             var thumbNail = $('<div>').addClass('thumbNail');
             //get width of each thumbNail
+            //ideally make responsive layout that resizes thumbnails upon window resize
+            //^save for beta
             var width =($('.grid').width()-15*5-8)/4; //(grid_width-thumbNail_margin*numDiv+1)/numDiv
             thumbNail.width(width);
             thumbNail.height(width*5/4);
