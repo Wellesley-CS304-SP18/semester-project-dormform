@@ -7,7 +7,7 @@ home.html
 <head>
     <meta charset="utf-8">
     <title>DormForm</title>
-    <link type="text/css" rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+    <link type="text/css" rel="stylesheet" href="../static/style.css">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
@@ -18,7 +18,7 @@ home.html
     <header>
         <h1><a href="/">DormForm</a></h1>
         <a href="{{url_for('newReview')}}"><button type="button">Leave a Review</button></a>
-        <a href="{{url_for('editReview')}}"><button type="button">Edit Review</button></a> <!-- rename button? your reviewed rooms/your rooms? -->
+        <a href="{{url_for('reviewedRooms')}}"><button type="button">Your Rooms</button></a> <!-- rename button? your reviewed rooms/your rooms? -->
     </header>
     {% endblock %}
 
@@ -29,28 +29,27 @@ home.html
         <form>
         <h2>Filter Rooms</h2>
             <label>Dormitory</label>
-            <select name="building">
+            <select name="dorm">
                 <option value=""></option>
                 <option value="Davis">Davis</option>
                 <option value="Shafer">Shafer</option>
             </select>
-            <!-- <label>Flooring</label>
+            <label>Flooring</label>
             <select name="flooring">
                 <option value=""></option>
-                <option value="Linoleum">Linoleum</option>
-                <option value="Wood">Wood</option>
-                <option value="Carpet">Carpet</option>
-            </select> -->
+                <option value="linoleum">Linoleum</option>
+                <option value="wood">Wood</option>
+                <option value="carpet">Carpet</option>
+            </select>
             <label>Rating</label>
             <div id="radios">
-                <input type="radio" name="avgRating" value=1><p>1</p>
-                <input type="radio" name="avgRating" value=2><p>2</p>
-                <input type="radio" name="avgRating" value=3><p>3</p>
-                <input type="radio" name="avgRating" value=4><p>4</p>
-                <input type="radio" name="avgRating" value=5><p>5</p>
+                <input type="radio" name="rating" value="1"><p>1</p>
+                <input type="radio" name="rating" value="2"><p>2</p>
+                <input type="radio" name="rating" value="3"><p>3</p>
+                <input type="radio" name="rating" value="4"><p>4</p>
+                <input type="radio" name="rating" value="5"><p>5</p>
             </div>
             <button id='submitBtn' type="button">Submit</button>
-        <p id="noFilter"><p>
         </form>
     </div>
 
@@ -81,7 +80,7 @@ home.html
             thumbNail.height(width*5/4);
             //add image
             var imgContainer = $('<div>').addClass('imgContainer'); //need to hide image overflow
-            var img = $('<img>').attr('src',"{{url_for('static', filename='room_example.jpeg')}}");
+            var img = $('<img>').attr('src','../static/room_example.jpeg');
             imgContainer.height(width);
             img.height(width); //only works for landscape images
             img.on('load', function(){ //center image within container
@@ -103,35 +102,9 @@ home.html
         {% endfor %}
 
         $('#submitBtn').click(function(){
-            $('#noFilter').text('');
             var data = $('form').serialize();
-            // console.log(data);
-            $.get("{{url_for('sortRooms')}}",
-            data,
-            resultsGrid,
-            'json')
-            .fail(errorHandler)
+            console.log(data);
         });
-
-        //updates the main display grid with the results of the user's query
-        function resultsGrid(response){
-            // console.log(response);
-            $('.grid').empty();
-            if(response.length==0){
-                var noResults = $('<h2>').text("No rooms matched your query")
-                $('.grid').append(noResults);
-            }
-            else{
-                for(i=0;i<response.length;i++){
-                    $('.grid').append(createThumbNail(response[i].roomID, response[i].url));
-                }
-            }
-        }
-
-        //tells the user to choose at least one filter before submitting the form
-        function errorHandler(error){
-            $('#noFilter').text('Please select at least one filter.');
-        }
 
     </script>
     {% endblock %}

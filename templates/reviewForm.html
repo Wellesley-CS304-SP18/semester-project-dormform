@@ -1,6 +1,6 @@
-<!--
+<!-- 
 CS304 Final Project: Dorm Form
-Midori Yang, Lauren Futami and Brenda Ji
+Midori Yang, Lauren Futami and Brenda Ji  
 reviewForm.html
 -->
 {% extends "home.html" %}
@@ -9,51 +9,44 @@ reviewForm.html
 
 <div id="wrapper">
 
-    <p> A form for writing reviews for dorms at Wellesley College
+    <!-- <p> A form for writing reviews for dorms at Wellesley College -->
         <div id="content">
-            <form method="POST" action="/newReview/" enctype="multipart/form-data">
-                <label for="reshalls">Residence Halls (will be implemented later!!)</label>
+            <form method="POST" action="/newReview/">
+                <!-- <label for="reshalls">Residence Halls (will be implemented later!!)</label> <br> -->
                 <!--         <select name="reshalls" id="reshallsdropdown">
                 <option value="none" selected = "selected">Choose One</option>
                 {% for reshall in reshalls %}
                 <option value = "{{reshall}}" SELECTED>{{reshall}}</option>
                 {% endfor %}
             </select> -->
-            <p>
-                <label for="roomIDs">Available Rooms So Far</label>
+            <p style="color:black; font-family: 'Nunito', sans-serif;">
+                <label for="roomIDs">Available Rooms So Far:</label><br>
                 <select name="roomIDs">
                     <option value="none" selected = "selected">Choose One</option>
                     {% for room in roomIDs %}
                     <option value = {{room['roomID']}} SELECTED>{{room['roomID']}}</option>
                     {% endfor %}
-                </select>
+                </select><br>
 
-                <p>
-                    <label for="flooring">Flooring</label>
+                <p style="color:black; font-family: 'Nunito', sans-serif;">
+                    <label for="flooring">Flooring:</label>
                     <select name="flooring">
-                        <option value = "Wood" SELECTED>wood</option>
-                        <option value = "Carpet" SELECTED>carpet</option>
-                        <option value = "Linoleum" SELECTED>linoleum</option>
-                    </select>
+                        <option value = "Wood" SELECTED>Wood</option>
+                        <option value = "Carpet" SELECTED>Carpet</option>
+                        <option value = "Linoleum" SELECTED>Linoleum</option>
+                    </select><br>
 
-                    <p>
-                        <label for="overallRating">Give your room an overall rating:</label>
+                    <p style="color:black; font-family: 'Nunito', sans-serif;">
+                        <label for="overallRating">Give your room an overall rating:</label><br>
 
-                        <p>
+                        <p style="color:black;">
                             <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
                             <input type="radio" name="overallRating" value="2"> 2<br>
                             <input type="radio" name="overallRating" value="3"> 3<br>
                             <input type="radio" name="overallRating" value="4"> 4<br>
-                            <input type="radio" name="overallRating" value="5"> 5
+                            <input type="radio" name="overallRating" value="5"> 5<br>
 
-                            <p>Review: <br><textarea name="review" rows="5" cols="30"></textarea>
-
-                              <p>Upload a jpeg room photo:
-                              <!-- <form method="post" action="" enctype="multipart/form-data"> -->
-                                  <!-- <p><label for="nm">NM: <input type="text" name="nm"></label></p> -->
-                                  <p><label for="pic">Pic: <input type="file" name="pic"></label></p>
-                                  <!-- <p><input type="submit" value="upload"></p> -->
-                              <!-- </form> -->
+                            <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30"></textarea> <br>
 
 
                                 <p><input type="submit" name="submit-btn" value="Submit Review">
