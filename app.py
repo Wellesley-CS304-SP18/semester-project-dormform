@@ -109,7 +109,7 @@ def newReview():
                     raise Exception('Not a JPEG')
 
                 filename = secure_filename(str(reviewID['reviewID'])+str(username)+'.jpeg')
-                pathname = 'images/'+filename
+                pathname = 'static/images/'+filename
                 f.save(pathname)
 
                 functions.insertPicName(conn,filename,reviewID['reviewID'],chosenRoomID)
