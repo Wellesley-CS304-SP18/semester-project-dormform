@@ -7,16 +7,20 @@ room.html
 {% extends 'home.html' %}
 
   {% block page_content %}
+
   <div id="room">
-    <h1>{{roomID}} Room Review</h1>
+    <h1></h1>
   </div>
+
+  <div id="wrapper">
+  <h2 style="font-family: 'Nunito', sans-serif;">Rooms reviewed by {{username}}</h2>
 
     <div id="sidebar"></div>
     <div id="content">
 
         <div id="flashes">
 
-            {% with messages = get_flashed_messages() %}
+          {% with messages = get_flashed_messages() %}
           {% if messages %}
           <ul style="list-style-type: none; color:red", class=flashes>
             {% for message in messages %}
@@ -26,8 +30,9 @@ room.html
           {% endif %}
         {% endwith %}
         </div>
+
   <section id="room_review">
-      <table id="room_review_table">
+      <table style="font-family: 'Nunito', sans-serif;" id="room_review_table">
           <tr><th>Room Number</th><th>Review</th><th>Rating</th><th>Flooring</th></tr>
           {% for review in reviews %}
           <tr class="review_row">
@@ -36,7 +41,7 @@ room.html
         <td class="rating">{{review['overallRating']}}</td>
         <td class="flooring">{{review['flooring']}}</td>
         <!-- <td class="edit"><a href="{{url_for('editRoom', roomID=review['roomID'], username='bji', review=review['reviewID'])}}"><button type="button">Edit Review</button></a></td> -->
-        <td class="edit"><a href="{{url_for('editRoom')}}"><button type="button">Edit Review</button></a></td>
+        <td class="edit"><a href="{{url_for('editRoom', roomID=review['roomID'])}}"><button type="button">Edit Review</button></a></td>
           </tr>
           {% endfor %}
       </table>
