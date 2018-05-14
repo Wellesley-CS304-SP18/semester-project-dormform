@@ -35,6 +35,28 @@ def home():
         roomsData = curs.fetchall()
         return render_template('home.html', roomsData = roomsData)
 
+@app.route('/sortRooms/', methods=['GET'])
+def sortRooms():
+    #display all the rooms that match the query on the home page
+    if request.method=='GET':
+        #query may have one or more arguments, must account for variable number of arguments
+        query = 'SELECT roomID FROM room WHERE'
+        #add corresponding column name for every query field
+        for key in request.args.keys():
+            if not request.args[key] == '':
+                query = query + ' {}=%s AND'.format(key);
+        query = query[:-4] #slice off the last AND
+        #take out any empty arguments from the query parameters
+        args = [x for x in request.args.values() if x!='']
+        conn = dbconn2.connect(DSN)
+        curs = conn.cursor(MySQLdb.cursors.DictCursor)
+        curs.execute(query, args)
+        results = curs.fetchall()
+        #add the url with which to build thumbnails to the results, which only contains the roomID
+        for result in results:
+            result['url'] = url_for('room',roomID=result['roomID'])
+        return jsonify(results);
+
 @app.route('/newReview/', methods=["GET", "POST"])
 def newReview():
     conn = dbconn2.connect(DSN)
@@ -132,7 +154,7 @@ if __name__ == '__main__':
         port = int(sys.argv[1])
         assert(port>1024)
     else:
-        port = 8000#os.getuid()
+        port = 8001#os.getuid()
 
     DSN = dbconn2.read_cnf()
     DSN['db'] = 'dormform_db'
