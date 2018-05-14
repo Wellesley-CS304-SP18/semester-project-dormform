@@ -1,6 +1,6 @@
 '''
 CS304 Final Project: Dorm Form
-Midori Yang, Lauren Futami and Brenda Ji  
+Midori Yang, Lauren Futami and Brenda Ji
 functions.py
 '''
 
@@ -40,10 +40,32 @@ def getUserRoomReviews(conn, username):
     return curs.fetchall()
 
 def getReshall(buildingID):
-    buildings = {'BAT':'Bates', 'BEB':'Beebe', 'CAZ':'Cazenove', 'CER':'Cervantes', 
-    'CLA':'Claflin', 'DOW':'Dower', 'FRE':'Freeman', 'FHC':'French House', 'HEM':'Hemlock', 
-    'LAK':'Lake House', 'MCA':'McAfee', 'MUN':'Munger', 'POM':'Pomeroy', 'SEV':'Severance', 
+    buildings = {'BAT':'Bates', 'BEB':'Beebe', 'CAZ':'Cazenove', 'CER':'Cervantes',
+    'CLA':'Claflin', 'DOW':'Dower', 'FRE':'Freeman', 'FHC':'French House', 'HEM':'Hemlock',
+    'LAK':'Lake House', 'MCA':'McAfee', 'MUN':'Munger', 'POM':'Pomeroy', 'SEV':'Severance',
     'SHA':'Shafer', 'STO':'Stone', 'DAV':'Davis', 'TCE':'Tower Court East', 'TCW':'Tower Court West'}
     reshall = buildings[buildingID]
-    return reshall 
+    return reshall
 
+
+# gets the average rating for the room
+def updateAverageRating(conn, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('update room set avgRating=(select avg(overallRating) from review where roomID=%s) where roomID=%s',[roomID, roomID])
+
+# get the reviewID for the file upload
+def getReviewID(conn, username, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('select reviewID from review where username=%s and roomID=%s',[username, roomID])
+    return curs.fetchone()
+
+# inserts the picture filename into the database
+def insertPicName(conn, filename, reviewID, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('insert into picture values(null,%s,%s,%s)',[filename,reviewID,roomID])
+
+# get all pictures for a specific review
+def getPicsForReviews(conn, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('select reviewID,pictureFile from picture where roomID=%s',[roomID])
+    return curs.fetchall()
