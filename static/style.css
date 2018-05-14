@@ -69,9 +69,6 @@ header button:hover{
     right: 0;
     font-family: 'Nunito', sans-serif;
 }
-#sidebar *:not(p){
-    display: block;
-}
 #sidebar h2{
     text-align: center;
     color: #fff;
@@ -87,29 +84,62 @@ header button:hover{
 }
 #sidebar input[type=radio],p{
     color: #fff;
+    display: inline;
+}
+#sidebar #noFilter{
+    text-align: center;
+    color: #fff;
+    display: block;
 }
 #sidebar #radios{
     margin-left: 20px;
     margin-bottom: 20px;
 }
-#sidebar input[type=submit]{
+#sidebar #submitBtn{
     background-color:#000;
     border: 1px solid #fff;
     border-radius: 4px;
     color: #fff;
     padding: 10px;
+    display: block;
     float: center;
     font-size: 15px;
+    cursor: pointer;
     -webkit-transition: background-color 0.2s ease-in;
     margin: 0 auto;
 }
-#sidebar input[type=submit]:hover{
+#sidebar #submitBtn:hover{
     background-color:#fff;
     color: #000;
 }
 
 .grid {
     margin-top: 70px;
+}
+/*adding a bunch of fade animations so that we know the elements are actually reloading
+and the code is executing; visual feedback*/
+@keyframes fadeIn { /*for Internet Explorer*/
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+@-webkit-keyframes fadeIn { /*for Chrome, Safari*/
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+@-moz-keyframes fadeIn { /*Firefox*/
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+.grid h2{
+    text-align: center;
+    color: #999999;
+    font-family: 'Nunito', sans-serif;
+    animation-name: fadeIn;
+    animation-duration: 0.5s;
+    -webkit-animation-name: fadeIn;
+    -webkit-animation-duration: 0.5s;
+    -moz-animation-name: fadeIn;
+    -moz-animation-duration: 0.5s;
 }
 .grid .thumbNail {
     margin: 0px 0px 15px 15px;
@@ -119,6 +149,12 @@ header button:hover{
     font-size: 18px;
     border-radius: 5px;
     border: 1px solid #000;
+    animation-name: fadeIn;
+    animation-duration: 0.5s;
+    -webkit-animation-name: fadeIn;
+    -webkit-animation-duration: 0.5s;
+    -moz-animation-name: fadeIn;
+    -moz-animation-duration: 0.5s;
 }
 .imgContainer {
     width: 100%;
