@@ -6,6 +6,18 @@ room.html
 
 {% extends 'home.html' %}
 
+<!-- delete later -->
+<head>
+    <meta charset="utf-8">
+    <title>DormForm</title>
+    <link type="text/css" rel="stylesheet" href="../static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+<!-- end of delete later -->
+
 	{% block page_content %}
 	<div id="room">
 		<h1>{{roomID}} Room Review</h1>
@@ -26,16 +38,96 @@ room.html
         </div>
   <section id="room_review">
       <table id="room_review_table">
-          <tr><th>Review</th><th>Rating</th><th>Flooring</th></tr>
+          <tr><th>Review</th><th>Rating</th><th>Picture</th></tr>
           {% for review in reviews %}
-          <tr class="review_row">
+          <tr class="review_row" id="{{review['reviewID']}}">
     	  <td class="review">{{review['review']}}</td>
     	  <td class="rating">{{review['overallRating']}}</td>
-    	  <td class="flooring">{{review['flooring']}}</td>
+        <td class="picture">
+
+          <div class="w3-content w3-display-container">
+            {% for picture in pictures %}
+            {% if picture['reviewID'] == review['reviewID'] %}
+            <a target="_blank" href="{{url_for('static',filename='images/'+picture['pictureFile'])}}">
+              <img class="dormPics" src="../static/images/{{picture['pictureFile']}}" width="300" height="200">
+            </a>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+            <button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
+            <button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
+
+
+	          </div>
+        </td>
           </tr>
-    	  {% endfor %}
+
+
+<!-- test data, delete after testing -->
+
+				<tr class="review_row">
+			<td class="review_td">'what a great room, wowow'</td>
+			<td class="rating">5</td>
+			<td class="pictures">
+				<div class="w3-content w3-display-container">
+					<a target="_blank" href="../static/room_example.jpg">
+  					<img class="dormPics" src="../static/room_example.jpg" width="300" height="200">
+					</a>
+					<a target="_blank" href="../static/room_example.jpg">
+  					<img class="dormPics" src="../static/room_example.jpeg" width="300" height="200">
+					</a>
+
+
+  				<button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
+  				<button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
+				</div>
+			<!--
+				<a href="../static/room_example.jpg">
+    			<img src="../static/room_example.jpg" alt="room_example" width="300" height="200">
+  			</a>
+				<a target="_blank" href="../static/room_example.jpeg">
+    			<img src="../static/room_example.jpeg" alt="room_example" width="300" height="200">
+  			</a>
+			</td>
+		-->
+				</tr>
+
+				<tr class="review_row">
+			<td class="review_td">'not the best'</td>
+			<td class="rating">3</td>
+				</tr>
+
+				<tr class="review_row">
+			<td class="review_td">'can't stand it!'</td>
+			<td class="rating">1</td>
+				</tr>
+
+<!-- end of test data -->
+
       </table>
   </section>
     </div>
+
+<script>
+// for the slideshow
+
+var slideIndex = 1;
+showDivs(slideIndex);
+
+function plusDivs(n) {
+  showDivs(slideIndex += n);
+}
+
+function showDivs(n) {
+  var i;
+  var x = document.getElementsByClassName("dormPics");
+  if (n > x.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = x.length}
+  for (i = 0; i < x.length; i++) {
+     x[i].style.display = "none";
+  }
+  x[slideIndex-1].style.display = "block";
+}
+</script>
 
 	{% endblock %}
