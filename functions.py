@@ -22,6 +22,12 @@ def newReview(conn, user, roomID, review, overallRating, flooring):
     defaultType = 'single' # change later
     curs.execute('INSERT INTO review (reviewID, username, roomID, review, overallRating, flooring) VALUES (NULL, %s, %s, %s, %s, %s)', [user, roomID, review, overallRating, flooring])
 
+def updateReview(conn, user, roomID, review, overallRating, flooring):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    defaultType = 'single' # change later
+    print ("UPDATE REVIEW FUNCTION: " + review)
+    curs.execute('UPDATE review SET review=%s, overallRating=%s, flooring=%s WHERE roomID=%s', [review, overallRating, flooring, roomID])
+
 def checkFirstReview(conn, user, roomID):
     print 'we here CHECK FIRST REVIEW'
     curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
@@ -47,6 +53,10 @@ def getReshall(buildingID):
     reshall = buildings[buildingID]
     return reshall
 
+def getReview(conn, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT review FROM review WHERE roomID = %s',[roomID])
+    return curs.fetchall()
 
 # gets the average rating for the room
 def updateAverageRating(conn, roomID):
