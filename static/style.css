@@ -180,3 +180,19 @@ and the code is executing; visual feedback*/
 #wrapper {
     margin-top: 70px;
 }
+
+#room_review_table tr:nth-child(even) {
+  border-collapse: collapse;
+  background-color: #f2f2f2;
+}
+
+.w3-button w3-black w3-display-left {
+  display: inline-block;
+  width: 200px;
+  padding: 8px;
+  color: #fff;
+  border: 1px solid #fff;
+  text-align: center;
+  outline: none;
+  text-decoration: none;
+}

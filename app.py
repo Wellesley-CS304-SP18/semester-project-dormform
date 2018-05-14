@@ -7,11 +7,14 @@ home.py
 #!/usr/local/bin/python2.7
 
 import os, sys, random
+import imghdr # for image upload
 import MySQLdb
 import dbconn2
 import functions
 
+
 from flask import Flask, render_template, make_response, request, redirect, url_for, session, send_from_directory, flash, jsonify
+from werkzeug import secure_filename # for image upload
 app = Flask(__name__)
 
 app.secret_key = 'your secret here'
@@ -60,7 +63,7 @@ def sortRooms():
 @app.route('/newReview/', methods=["GET", "POST"])
 def newReview():
     conn = dbconn2.connect(DSN)
-    username = 'bji'
+    username = 'lfutami02'
     roomIDs = functions.getRoomNums(conn);
     if username is not None:
         if request.method == "GET":
@@ -71,14 +74,56 @@ def newReview():
             review = request.form['review']
             rating = request.form['overallRating']
             firstReview = functions.checkFirstReview(conn, username, chosenRoomID)
-            if len(firstReview) == 0: # Leave a new review
+
+            # Leave a new review
+            if len(firstReview) == 0:
+                # inserts new review for the room and updates the average rating
                 functions.newReview(conn, username, chosenRoomID, review, rating, flooring)
+                functions.updateAverageRating(conn, chosenRoomID)
                 flash("Thanks for your review!")
             else: # Need to edit a review --> not sure how to do this yet.
                 # oldReview = functions.getOldReview(conn, username, roomID)
                 # prevReview = oldReview['review']
                 # return(conn, roomID)
                 flash("You have already reviewed this room. Please choose another room to review.")
+
+            # FILE UPLOAD
+            print "about to do file upload"
+            print "current working directory #1: " + os.getcwd()
+            print "trying to get the reviewID..."
+            reviewID = functions.getReviewID(conn,username,chosenRoomID)
+            # reviewID = str(reviewID['reviewID'])
+            # print "reviewID: " + reviewID
+            # print "reviewID dict: " + reviewID['reviewID']
+            print "reviewID"
+            print reviewID
+            print "reviewID['reviewID']"
+            print reviewID['reviewID']
+            print "end of reviewID attempt..."
+            try:
+                f = request.files['pic']
+                mime_type = imghdr.what(f.stream)
+
+
+                if mime_type != 'jpeg':
+                    raise Exception('Not a JPEG')
+
+                filename = secure_filename(str(reviewID['reviewID'])+str(username)+'.jpeg')
+                pathname = 'images/'+filename
+                f.save(pathname)
+
+                functions.insertPicName(conn,filename,reviewID['reviewID'],chosenRoomID)
+                flash('Upload successful')
+                # return render_template('form.html',
+                #                    src=url_for('pic',fname=filename),
+                #                    nm=nm)
+
+            except Exception as err:
+                flash('Upload failed {why}'.format(why=err))
+                # return render_template('form.html',src='',nm='')
+            # END FILE UPLOAD
+
+
             return render_template('reviewForm.html', roomIDs=roomIDs)
     else: # if there's no username found yet, logins not implemented yet
         flash("No userid; please login first.")
@@ -91,7 +136,8 @@ def room(roomID):
     # just post all of the reviews for DAV265
     if request.method == "GET":
         reviews = functions.getRoomReviews(conn, roomID)
-        return render_template('room.html',roomID=roomID,reviews=reviews)
+        pictures = functions.getPicsForReviews(conn, roomID)
+        return render_template('room.html',roomID=roomID,reviews=reviews,pictures=pictures)
 
     # if POST
     # find the reviews for the room and display them
@@ -147,6 +193,47 @@ def editRoom():
     building = functions.getReshall(roomID[:3])
     roomNum = roomID[3:6]
     return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
+
+#!/usr/local/bin/python2.7
+
+
+
+
+#
+# # for image upload
+# @app.route('/upload', methods=["GET", "POST"])
+# def file_upload():
+#     if request.method == 'GET':
+#         return render_template('form.html',src='',nm='')
+#     else:
+#         try:
+#             nm = int(request.form['nm']) # may throw error
+#             f = request.files['pic']
+#             mime_type = imghdr.what(f.stream)
+#             if mime_type != 'jpeg':
+#                 raise Exception('Not a JPEG')
+#             filename = secure_filename(str(nm)+'.jpeg')
+#
+#             basedir = os.path.abspath(os.path.dirname(_file_))
+#             file.save(os.path.join(basedir, app.config['UPLOAD_FOLDER'], filename))
+#
+#             pathname = 'images/'+filename
+#             f.save(pathname)
+#             flash('Upload successful')
+#             return render_template('form.html',
+#                                    src=url_for('pic',fname=filename),
+#                                    nm=nm)
+#
+#         except Exception as err:
+#             flash('Upload failed {why}'.format(why=err))
+#             return render_template('form.html',src='',nm='')
+#
+# @app.route('/pic/<fname>')
+# def pic(fname):
+#     f = secure_filename(fname)
+#     return send_from_directory('images',f)
+
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
