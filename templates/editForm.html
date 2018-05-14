@@ -1,53 +1,32 @@
-<!doctype html>
-<head>
-    <meta charset="utf-8">
-    <title>DormForm</title>
-    <link type="text/css" rel="stylesheet" href="../static/style.css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-</head>
-
 {% extends "home.html" %}
-<body>
-  {% block header %}
-    <header>
-        <h1><a href="/">DormForm</a></h1>
-        <a href="{{url_for('newReview')}}"><button type="button">Leave a Review</button></a>
-        <a href="{{url_for('editReview')}}"><button type="button">Edit Review</button></a>
-    </header>
-    {% endblock %}
 
 {% block page_content %}
 <div id="wrapper">
-  <h1>Edit a Review for {{building}} {{roomNum}}</h1>
+  <h2 style="font-family: 'Nunito', sans-serif;">Edit a Review for {{building}} {{roomNum}}</h2>
   <div id="content">
-   <form method="POST" action="/edit/">
+   <form method="POST" action="{{url_for('editRoom', roomID=roomID)}}">
         
-        <p>
-        <label for="flooring">Flooring</label>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">
+        <label for="flooring">Flooring:</label>
         <select name="flooring">
-          <option value = "Wood" SELECTED>wood</option>
-          <option value = "Carpet" SELECTED>carpet</option>
-          <option value = "Linoleum" SELECTED>linoleum</option>
+          <option value = "Wood" SELECTED>Wood</option>
+          <option value = "Carpet" SELECTED>Carpet</option>
+          <option value = "Linoleum" SELECTED>Linoleum</option>
         </select>
-
-        <p>
+        <br>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">
         <label for="overallRating">Give your room an overal rating:</label>
-        <p>
-        <input type="radio" name="overallRating" value="1"> 1<br>
+        <br>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">
+        <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
         <input type="radio" name="overallRating" value="2"> 2<br>
         <input type="radio" name="overallRating" value="3"> 3<br>
         <input type="radio" name="overallRating" value="4"> 4<br>
-        <input type="radio" name="overallRating" value="5"> 5
-
-        <p>Review: <br><textarea name="review" value={{userreview}}rows="5" cols="30"></textarea>
+        <input type="radio" name="overallRating" value="5"> 5 <br>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30">{{userreview}}</textarea><br>
 
 
   <p><input type="submit" name="submit-btn" value="Submit Review">
     </form>
 </div>
 {% endblock %}
-
-</body>
-</html>
