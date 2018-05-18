@@ -11,6 +11,14 @@ home.html
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
+    <!-- bootstrap stuff for carousel -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="js/jquery-1.7.1.min.js"></script>
+    <script src="js/bootstrap.js"></script>
 </head>
 <body>
 
@@ -18,7 +26,7 @@ home.html
     <header>
         <h1><a href="/">DormForm</a></h1>
         <a href="{{url_for('newReview')}}"><button type="button">Leave a Review</button></a>
-        <a href="{{url_for('editReview')}}"><button type="button">Edit Review</button></a> <!-- rename button? your reviewed rooms/your rooms? -->
+        <a href="{{url_for('reviewedRooms')}}"><button type="button">Your Reviews</button></a>
     </header>
     {% endblock %}
 
@@ -31,6 +39,8 @@ home.html
             <label>Dormitory</label>
             <select name="building">
                 <option value=""></option>
+                <!-- hard coded for now, for the beta version it should be results from the database -->
+                <option value="Bates">Bates</option>
                 <option value="Davis">Davis</option>
                 <option value="Shafer">Shafer</option>
             </select>
@@ -56,7 +66,7 @@ home.html
 
     <script>
 
-        //get the width of the scrollbar as it subtracts from the display area
+        //get the width of the scrollbar as it subtracts from the calculated display area
         function scrollbarWidth() {
             var div = $('<div style="width:50px;height:50px;overflow:hidden;position:absolute;top:-200px;left:-200px;"><div style="height:100px;"></div>');
             // Append our div, do our calculation and then remove it
@@ -71,7 +81,7 @@ home.html
         //set width of grid area
         $('.grid').width($(window).width()-270-scrollbarWidth());
 
-        function createThumbNail(roomID,url){
+        function createThumbNail(roomID,url,imgUrl="{{url_for('static', filename='room_example.jpeg')}}"){
             var thumbNail = $('<div>').addClass('thumbNail');
             //get width of each thumbNail
             //ideally make responsive layout that resizes thumbnails upon window resize
@@ -81,7 +91,7 @@ home.html
             thumbNail.height(width*5/4);
             //add image
             var imgContainer = $('<div>').addClass('imgContainer'); //need to hide image overflow
-            var img = $('<img>').attr('src',"{{url_for('static', filename='room_example.jpeg')}}");
+            var img = $('<img>').attr('src',imgUrl);
             imgContainer.height(width);
             img.height(width); //only works for landscape images
             img.on('load', function(){ //center image within container
@@ -99,7 +109,11 @@ home.html
 
         //Create thumbnails for each room
         {% for room in roomsData %}
-            $('.grid').append(createThumbNail("{{room.roomID}}", "{{url_for('room', roomID=room.roomID)}}"));
+            {% if room.roomID in picData%}
+                $('.grid').append(createThumbNail("{{room.roomID}}", "{{url_for('room', roomID=room.roomID)}}","{{picData[room.roomID]}}"));
+            {% else %}
+                $('.grid').append(createThumbNail("{{room.roomID}}", "{{url_for('room', roomID=room.roomID)}}"));
+            {% endif %}
         {% endfor %}
 
         $('#submitBtn').click(function(){
@@ -123,7 +137,7 @@ home.html
             }
             else{
                 for(i=0;i<response.length;i++){
-                    $('.grid').append(createThumbNail(response[i].roomID, response[i].url));
+                    $('.grid').append(createThumbNail(response[i].roomID, response[i].url,response[i].image));
                 }
             }
         }

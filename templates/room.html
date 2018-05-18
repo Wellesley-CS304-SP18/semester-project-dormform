@@ -6,21 +6,11 @@ room.html
 
 {% extends 'home.html' %}
 
-<!-- delete later -->
-<head>
-    <meta charset="utf-8">
-    <title>DormForm</title>
-    <link type="text/css" rel="stylesheet" href="../static/style.css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-</head>
-<!-- end of delete later -->
 
 	{% block page_content %}
 	<div id="room">
-		<h1>{{roomID}} Room Review</h1>
+		<h1 style="margin-top:80px;margin-left:20px;font-family:'Nunito',sans-serif">{{roomID}} Room Review</h1>
 	</div>
     <div id="content">
 
@@ -38,78 +28,107 @@ room.html
         </div>
   <section id="room_review">
       <table id="room_review_table">
-          <tr><th>Review</th><th>Rating</th><th>Picture</th></tr>
+          <tr class="review_header_tr">
+            <th>Picture</th>
+            <th>Rating</th>
+            <th>Review</th>
+          </tr>
           {% for review in reviews %}
-          <tr class="review_row" id="{{review['reviewID']}}">
-    	  <td class="review">{{review['review']}}</td>
-    	  <td class="rating">{{review['overallRating']}}</td>
+          <tr class="review_row_tr" id="reviewNum{{review['reviewID']}}">
+
         <td class="picture">
 
-          <div class="w3-content w3-display-container">
+
+
+          <div class="container" style="width:350px">
+            <div id="review{{review['reviewID']}}" class="carousel slide" data-ride="carousel" style="width:300px;height:200px;">
+            <!-- Indicators -->
+
+            <ol class="carousel-indicators">
+            {% set picNum = 0 %}
+              {% for picture in pictures %}
+                {% if picture['reviewID'] == review['reviewID'] %}
+                  {% if picNum == 0 %}
+                    <li data-target="#review{{review['reviewID']}}" data-slide-to="{{picNum}}" class="active"></li>
+                  {% else %}
+                    <li data-target="#review{{review['reviewID']}}" data-slide-to="{{picNum}}"></li>
+                  {% endif %} <!-- if picNum==0 -->
+                  {% set picNum = picNum + 1 %}
+                {% endif %} <!-- if picture['reviewID'] == review['reviewID'] -->
+              {% endfor %} <!-- picture in pictures -->
+            </ol>
+
+            <!-- Wrapper for slides -->
+            <div class="carousel-inner">
+            {% set picNum = 0 %}
             {% for picture in pictures %}
-            {% if picture['reviewID'] == review['reviewID'] %}
-            <a target="_blank" href="{{url_for('static',filename='images/'+picture['pictureFile'])}}">
-              <img class="dormPics" src="../static/images/{{picture['pictureFile']}}" width="300" height="200">
-            </a>
-            {% endif %}
+              {% if picture['reviewID'] == review['reviewID'] %}
+                {% if picNum == 0 %}
+              <div class="item active" style="text-align:center">
+                <a target="_blank" href="{{url_for('static',filename='images/'+picture['pictureFile'])}}">
+                  <img src="../static/images/{{picture['pictureFile']}}" alt="{{picture['pictureFile']}}" style="height:200px;display:inline-block">
+                </a>
+              </div>
+
+                {% else %}
+              <div class="item" style="text-align:center">
+                <a target="_blank" href="{{url_for('static',filename='images/'+picture['pictureFile'])}}">
+                  <img src="../static/images/{{picture['pictureFile']}}" alt="{{picture['pictureFile']}}" style="height:200px;display:inline-block">
+                </a>
+              </div>
+                {% endif %} <!-- if picNum==0 -->
+                {% set picNum = picNum + 1 %}
+              {% endif %}
             {% endfor %}
-            {% endfor %}
-            <button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
-            <button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
+            </div>
 
 
-	          </div>
+
+
+          <!-- Left and right controls -->
+          <a class="left carousel-control" href="#review{{review['reviewID']}}" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#review{{review['reviewID']}}" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right"></span>
+            <span class="sr-only">Next</span>
+          </a>
+
+
+
+
+            </div>
+          </div>
+
+
+
+
         </td>
-          </tr>
 
 
-<!-- test data, delete after testing -->
-
-				<tr class="review_row">
-			<td class="review_td">'what a great room, wowow'</td>
-			<td class="rating">5</td>
-			<td class="pictures">
-				<div class="w3-content w3-display-container">
-					<a target="_blank" href="../static/room_example.jpg">
-  					<img class="dormPics" src="../static/room_example.jpg" width="300" height="200">
-					</a>
-					<a target="_blank" href="../static/room_example.jpg">
-  					<img class="dormPics" src="../static/room_example.jpeg" width="300" height="200">
-					</a>
+          <td class="rating">
+            <div style="width:30px;margin:10px">{{review['overallRating']}}</div>
+          </td>
+          <td class="review">
+            <div style="margin:10px">{{review['review']}}</div>
+          </td>
 
 
-  				<button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
-  				<button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
-				</div>
-			<!--
-				<a href="../static/room_example.jpg">
-    			<img src="../static/room_example.jpg" alt="room_example" width="300" height="200">
-  			</a>
-				<a target="_blank" href="../static/room_example.jpeg">
-    			<img src="../static/room_example.jpeg" alt="room_example" width="300" height="200">
-  			</a>
-			</td>
-		-->
-				</tr>
+        </tr>
+  {% endfor %} <!-- review in reviews -->
 
-				<tr class="review_row">
-			<td class="review_td">'not the best'</td>
-			<td class="rating">3</td>
-				</tr>
 
-				<tr class="review_row">
-			<td class="review_td">'can't stand it!'</td>
-			<td class="rating">1</td>
-				</tr>
 
-<!-- end of test data -->
+
+
 
       </table>
   </section>
-    </div>
+</div> <!-- content -->
 
 <script>
-// for the slideshow
+// for the slideshow, delete because we are using bootstrap now
 
 var slideIndex = 1;
 showDivs(slideIndex);

@@ -181,9 +181,33 @@ and the code is executing; visual feedback*/
     margin-top: 70px;
 }
 
-#room_review_table tr:nth-child(even) {
-  border-collapse: collapse;
-  background-color: #f2f2f2;
+#room_review_table {
+    border-collapse: collapse;
+    width: 90%;
+    margin: 20px;
+}
+
+/* creates a line under each row */
+.review_row_tr {
+  border-bottom: 1px solid #ccc;
+}
+
+.review_header_tr {
+  border-bottom: 1px solid #ccc;
+}
+
+.carousel.slide {
+   width: 300px;
+   height: 200px;
+}
+
+.item.active, .item {
+  text-align: center;
+}
+
+.item.active a img, .item a img{
+  height: 200px;
+  display: inline-block;
 }
 
 .w3-button w3-black w3-display-left {

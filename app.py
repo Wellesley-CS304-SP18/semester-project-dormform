@@ -33,10 +33,10 @@ def home():
     #display all the rooms on the home page
     if request.method=='GET':
         conn = dbconn2.connect(DSN)
-        curs = conn.cursor(MySQLdb.cursors.DictCursor)
-        curs.execute('SELECT roomID FROM room')
-        roomsData = curs.fetchall()
-        return render_template('home.html', roomsData = roomsData)
+        roomsData = functions.getRoomNums(conn)
+        picData = functions.getPicsForThumbnails(conn)
+        print picData
+        return render_template('home.html', roomsData = roomsData, picData = picData)
 
 @app.route('/sortRooms/', methods=['GET'])
 def sortRooms():
@@ -55,15 +55,18 @@ def sortRooms():
         curs = conn.cursor(MySQLdb.cursors.DictCursor)
         curs.execute(query, args)
         results = curs.fetchall()
-        #add the url with which to build thumbnails to the results, which only contains the roomID
+        picData = functions.getPicsForThumbnails(conn)
+        #add the url and pathname with which to build the thumbnails for each room
         for result in results:
             result['url'] = url_for('room',roomID=result['roomID'])
+            if result['roomID'] in picData:
+                result['image'] = picData[result['roomID']]
         return jsonify(results);
 
 @app.route('/newReview/', methods=["GET", "POST"])
 def newReview():
     conn = dbconn2.connect(DSN)
-    username = 'lfutami02'
+    username = 'bji'
     roomIDs = functions.getRoomNums(conn);
     if username is not None:
         if request.method == "GET":
@@ -81,7 +84,7 @@ def newReview():
                 functions.newReview(conn, username, chosenRoomID, review, rating, flooring)
                 functions.updateAverageRating(conn, chosenRoomID)
                 flash("Thanks for your review!")
-            else: 
+            else:
                 flash("You have already reviewed this room. Please choose another room to review.")
 
             # FILE UPLOAD
@@ -180,7 +183,7 @@ def editRoom(roomID):
             rating = request.form['overallRating']
             print flooring
             print review
-            print rating 
+            print rating
             functions.updateReview(conn, username, roomID, review, rating, flooring)
             flash('Thanks for your review! The database has been updated.')
             return redirect(url_for('reviewedRooms', roomIDs=roomIDs))
@@ -235,11 +238,11 @@ if __name__ == '__main__':
         port = int(sys.argv[1])
         assert(port>1024)
     else:
-        port = 8001#os.getuid()
+        port = os.getuid()
 
     DSN = dbconn2.read_cnf()
     DSN['db'] = 'dormform_db'
     app.debug = True
-    app.run('0.0.0.0',port)
+    app.run('0.0.0.0',8002)
     #app.debug = True
     #app.run('0.0.0.0',os.getuid()+1)

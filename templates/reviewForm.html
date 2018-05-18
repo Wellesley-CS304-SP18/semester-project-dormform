@@ -11,7 +11,7 @@ reviewForm.html
 
     <!-- <p> A form for writing reviews for dorms at Wellesley College -->
         <div id="content">
-            <form method="POST" action="/newReview/">
+            <form method="POST" action="/newReview/" enctype="multipart/form-data">
                 <!-- <label for="reshalls">Residence Halls (will be implemented later!!)</label> <br> -->
                 <!--         <select name="reshalls" id="reshallsdropdown">
                 <option value="none" selected = "selected">Choose One</option>
@@ -48,11 +48,11 @@ reviewForm.html
 
                             <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30"></textarea><br>
 
-
-                                <p><input type="submit" name="submit-btn" value="Submit Review">
-                                </form>
-                            </div>
-                        </div>
+                            <p><label style="color:black; font-family: 'Nunito', sans-serif;" for="pic">Pic: <input type="file" name="pic"></label></p> <br>
+                            <p><input type="submit" name="submit-btn" value="Submit Review">
+            </form>
+        </div>
+</div>
                         <div id="flashes">
                             {% with messages = get_flashed_messages() %}
                             {% if messages %}
