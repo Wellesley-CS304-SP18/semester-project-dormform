@@ -36,11 +36,10 @@ room.html
           <tr><th>Room Number</th><th>Review</th><th>Rating</th><th>Flooring</th></tr>
           {% for review in reviews %}
           <tr class="review_row">
-        <td class="roomNum">{{review['roomID']}}</td>    
+        <td class="roomNum"><a href="{{url_for('room', roomID = review['roomID'])}}">{{review['roomID']}}</td>    
         <td class="review">{{review['review']}}</td>
         <td class="rating">{{review['overallRating']}}</td>
         <td class="flooring">{{review['flooring']}}</td>
-        <!-- <td class="edit"><a href="{{url_for('editRoom', roomID=review['roomID'], username='bji', review=review['reviewID'])}}"><button type="button">Edit Review</button></a></td> -->
         <td class="edit"><a href="{{url_for('editRoom', roomID=review['roomID'])}}"><button type="button">Edit Review</button></a></td>
           </tr>
           {% endfor %}

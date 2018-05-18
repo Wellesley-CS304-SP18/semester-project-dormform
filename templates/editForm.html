@@ -4,7 +4,7 @@
 <div id="wrapper">
   <h2 style="font-family: 'Nunito', sans-serif;">Edit a Review for {{building}} {{roomNum}}</h2>
   <div id="content">
-   <form method="POST" action="{{url_for('editRoom', roomID=roomID)}}">
+   <form method="POST" action="{{url_for('editRoom', roomID=roomID)}}" enctype="multipart/form-data">
         
         <p style="color:black; font-family: 'Nunito', sans-serif;">
         <label for="flooring">Flooring:</label>
@@ -14,19 +14,43 @@
           <option value = "Linoleum" SELECTED>Linoleum</option>
         </select>
         <br>
+  
         <p style="color:black; font-family: 'Nunito', sans-serif;">
-        <label for="overallRating">Give your room an overal rating:</label>
-        <br>
-        <p style="color:black; font-family: 'Nunito', sans-serif;">
-        <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
-        <input type="radio" name="overallRating" value="2"> 2<br>
-        <input type="radio" name="overallRating" value="3"> 3<br>
-        <input type="radio" name="overallRating" value="4"> 4<br>
-        <input type="radio" name="overallRating" value="5"> 5 <br>
+        <label for="overallRating">Give your room an overall rating:</label><br>
+          <p style="color:black;">
+          <input type="radio" name="overallRating" value="1"> 1<br>
+          <input type="radio" name="overallRating" value="2"> 2<br>
+          <input type="radio" name="overallRating" value="3" checked="checked"> 3<br>
+          <input type="radio" name="overallRating" value="4"> 4<br>
+          <input type="radio" name="overallRating" value="5"> 5<br>
+
         <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30">{{userreview}}</textarea><br>
 
-
-  <p><input type="submit" name="submit-btn" value="Submit Review">
+          <!-- MAKING A DELETE PHOTO BUTTON -->
+        {% if picture %}
+            <p style="color:black; font-family: 'Nunito', sans-serif;">Your Photo:</p><br>
+            <a target="_blank" href="{{url_for('static',filename='images/'+picture['pictureFile'])}}">
+            <img class="dormPics" src="../static/images/{{picture['pictureFile']}}" width="300" height="200">
+            </a><br>
+            <input type="submit" style="color:black" name="submit" value="Delete Photo"><br>
+        {% else %}
+            <p><label style="color:black; font-family: 'Nunito', sans-serif;" for="pic">Upload a New Photo:<input type="file" name="pic"></label></p> <br>
+        {% endif %}
+        
+        
+  <p><input type="submit" style="color:black" name="submit" value="Update Review">
     </form>
 </div>
+<div id="flashes">
+                            {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                            <ul style="list-style-type: none; color:red", class=flashes>
+                                {% for message in messages %}
+                                <li>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
 {% endblock %}

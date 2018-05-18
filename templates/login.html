@@ -1,0 +1,30 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <title>DormForm</title>
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1 style="color:black; font-family: 'Nunito', sans-serif;">Log into DormForm!</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div id="messages">
+            {% for msg in messages %}
+                <p>{{msg}}</p>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- route defined by CAS -->
+   <form action="/login/"><button>login</button></form>
+
+<!--     {% if username %}
+       <form action="/logout/"><button>logout {{username}}</button></form>
+    {% else %}
+       <form action="/login/"><button>login</button></form>
+    {% endif %}    -->
+
+</body>
+</html>

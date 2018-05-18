@@ -196,3 +196,10 @@ and the code is executing; visual feedback*/
   outline: none;
   text-decoration: none;
 }
+
+.star-rating {
+  line-height:32px;
+  font-size:1.25em;
+}
+
+.star-rating .fa-star{color: yellow;}

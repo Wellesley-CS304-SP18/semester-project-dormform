@@ -8,37 +8,34 @@ reviewForm.html
 {% block page_content %}
 
 <div id="wrapper">
-
     <!-- <p> A form for writing reviews for dorms at Wellesley College -->
         <div id="content">
-            <form method="POST" action="/newReview/">
-                <!-- <label for="reshalls">Residence Halls (will be implemented later!!)</label> <br> -->
-                <!--         <select name="reshalls" id="reshallsdropdown">
-                <option value="none" selected = "selected">Choose One</option>
+            <form method="POST" action="/newReview/" enctype="multipart/form-data">
+                <label for="reshalls">Please Choose a Residence Hall:</label>
+                <select name="reshalls" id="reshallsdropdown" onchange="getRoomNums(this.value)">
+                <option value="none" selected="selected">Choose One</option>
                 {% for reshall in reshalls %}
-                <option value = "{{reshall}}" SELECTED>{{reshall}}</option>
+                    <option value = "{{reshall['building']}}">{{reshall['building']}}</option>
                 {% endfor %}
-            </select> -->
-            <p style="color:black; font-family: 'Nunito', sans-serif;">
-                <label for="roomIDs">Available Rooms So Far:</label><br>
-                <select name="roomIDs">
+                </select> <br>
+
+
+                <p style="color:black; font-family: 'Nunito', sans-serif;">
+                <label for="roomNums">Choose a Room Number:</label><br>
+                <select name="roomNums">
                     <option value="none" selected = "selected">Choose One</option>
-                    {% for room in roomIDs %}
-                    <option value = {{room['roomID']}} SELECTED>{{room['roomID']}}</option>
-                    {% endfor %}
                 </select><br>
 
                 <p style="color:black; font-family: 'Nunito', sans-serif;">
                     <label for="flooring">Flooring:</label>
                     <select name="flooring">
                         <option value = "Wood" SELECTED>Wood</option>
-                        <option value = "Carpet" SELECTED>Carpet</option>
-                        <option value = "Linoleum" SELECTED>Linoleum</option>
+                        <option value = "Carpet">Carpet</option>
+                        <option value = "Linoleum">Linoleum</option>
                     </select><br>
 
                     <p style="color:black; font-family: 'Nunito', sans-serif;">
                         <label for="overallRating">Give your room an overall rating:</label><br>
-
                         <p style="color:black;">
                             <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
                             <input type="radio" name="overallRating" value="2"> 2<br>
@@ -48,11 +45,11 @@ reviewForm.html
 
                             <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30"></textarea><br>
 
-
-                                <p><input type="submit" name="submit-btn" value="Submit Review">
-                                </form>
-                            </div>
-                        </div>
+                            <p><label style="color:black; font-family: 'Nunito', sans-serif;" for="pic">Would you like to upload a photo? <input type="file" name="pic"></label></p> <br>
+                            <p><input type="submit" style="color:black" name="submit-btn" value="Submit Review">
+            </form>
+        </div>
+</div>
                         <div id="flashes">
                             {% with messages = get_flashed_messages() %}
                             {% if messages %}
@@ -64,4 +61,29 @@ reviewForm.html
                             {% endif %}
                             {% endwith %}
                         </div>
+
+<script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+
+<script>
+
+// getRoomNums based on a building from the database 
+function getRoomNums(str){
+    console.log(str)
+    $.get("{{url_for('setAJAXRoomNums')}}", 
+        str, 
+        updateDropdownRoomNums,
+        'json')
+}
+
+
+function updateDropdownRoomNums(response) {
+    $('select[name=roomNums]').empty();
+    console.log(response)
+    $('select[name=roomNums]').append($('<option>').val("none").text("Choose One"));
+    for (var i = 0; i < response.length; i++) {
+        $('select[name=roomNums]').append($('<option>').val(response[i].roomNum).text(response[i].roomNum));
+    } 
+}
+
+</script>
 {% endblock %}
