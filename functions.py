@@ -79,3 +79,13 @@ def getPicsForReviews(conn, roomID):
     curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
     curs.execute('select reviewID,pictureFile from picture where roomID=%s',[roomID])
     return curs.fetchall()
+
+# get pathname of pictures to display for each room on the home page if the room has pictures
+def getPicsForThumbnails(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('select room.roomID,pictureFile from room inner join picture on room.roomID=picture.roomID')
+    results = curs.fetchall()
+    picData = {}
+    for result in results:
+        picData[result['roomID']] = 'static/images/' + result['pictureFile']
+    return picData
