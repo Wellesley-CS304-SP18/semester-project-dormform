@@ -1,0 +1,941 @@
+'''
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji
+app.py
+'''
+
+#!/usr/local/bin/python2.7
+
+import os, sys, random
+import imghdr # for image upload
+import MySQLdb
+import dbconn2
+import functions
+
+
+from flask import Flask, render_template, make_response, request, redirect, url_for, session, send_from_directory, flash, jsonify
+from werkzeug import secure_filename # for image upload
+app = Flask(__name__)
+
+app.secret_key = 'your secret here'
+# replace that with a random key
+app.secret_key = ''.join([ random.choice(('ABCDEFGHIJKLMNOPQRSTUVXYZ' +
+                                          'abcdefghijklmnopqrstuvxyz' +
+                                          '0123456789'))
+                           for i in range(20) ])
+
+
+# This gets us better error messages for certain common request errors
+app.config['TRAP_BAD_REQUEST_ERRORS'] = True
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    #display all the rooms on the home page
+    if request.method=='GET':
+        conn = dbconn2.connect(DSN)
+        roomsData = functions.getRoomNums(conn)
+        picData = functions.getPicsForThumbnails(conn)
+        print picData
+        return render_template('home.html', roomsData = roomsData, picData = picData)
+
+@app.route('/sortRooms/', methods=['GET'])
+def sortRooms():
+    #display all the rooms that match the query on the home page
+    if request.method=='GET':
+        #query may have one or more arguments, must account for variable number of arguments
+        query = 'SELECT roomID FROM room WHERE'
+        #add corresponding column name for every query field
+        for key in request.args.keys():
+            if not request.args[key] == '':
+                query = query + ' {}=%s AND'.format(key);
+        query = query[:-4] #slice off the last AND
+        #take out any empty arguments from the query parameters
+        args = [x for x in request.args.values() if x!='']
+        conn = dbconn2.connect(DSN)
+        curs = conn.cursor(MySQLdb.cursors.DictCursor)
+        curs.execute(query, args)
+        results = curs.fetchall()
+        picData = functions.getPicsForThumbnails(conn)
+        #add the url and pathname with which to build the thumbnails for each room
+        for result in results:
+            result['url'] = url_for('room',roomID=result['roomID'])
+            if result['roomID'] in picData:
+                result['image'] = picData[result['roomID']]
+        return jsonify(results);
+
+@app.route('/newReview/', methods=["GET", "POST"])
+def newReview():
+    conn = dbconn2.connect(DSN)
+    username = 'bji'
+    roomIDs = functions.getRoomNums(conn);
+    if username is not None:
+        if request.method == "GET":
+            return render_template('reviewForm.html', roomIDs = roomIDs)
+        else: # POST
+            chosenRoomID = request.form['roomIDs']
+            flooring = request.form['flooring']
+            review = request.form['review']
+            rating = request.form['overallRating']
+            firstReview = functions.checkFirstReview(conn, username, chosenRoomID)
+
+            # Leave a new review
+            if len(firstReview) == 0:
+                # inserts new review for the room and updates the average rating
+                functions.newReview(conn, username, chosenRoomID, review, rating, flooring)
+                functions.updateAverageRating(conn, chosenRoomID)
+                flash("Thanks for your review!")
+            else:
+                flash("You have already reviewed this room. Please choose another room to review.")
+
+            # FILE UPLOAD
+            print "about to do file upload"
+            print "current working directory #1: " + os.getcwd()
+            print "trying to get the reviewID..."
+            reviewID = functions.getReviewID(conn,username,chosenRoomID)
+            # reviewID = str(reviewID['reviewID'])
+            # print "reviewID: " + reviewID
+            # print "reviewID dict: " + reviewID['reviewID']
+            print "reviewID"
+            print reviewID
+            print "reviewID['reviewID']"
+            print reviewID['reviewID']
+            print "end of reviewID attempt..."
+            try:
+                f = request.files['pic']
+                mime_type = imghdr.what(f.stream)
+
+
+                if mime_type != 'jpeg':
+                    raise Exception('Not a JPEG')
+
+                filename = secure_filename(str(reviewID['reviewID'])+str(username)+'.jpeg')
+                pathname = 'static/images/'+filename
+                f.save(pathname)
+
+                functions.insertPicName(conn,filename,reviewID['reviewID'],chosenRoomID)
+                flash('Upload successful')
+                # return render_template('form.html',
+                #                    src=url_for('pic',fname=filename),
+                #                    nm=nm)
+
+            except Exception as err:
+                flash('Upload failed {why}'.format(why=err))
+                # return render_template('form.html',src='',nm='')
+            # END FILE UPLOAD
+
+
+            return render_template('reviewForm.html', roomIDs=roomIDs)
+    else: # if there's no username found yet, logins not implemented yet
+        flash("No userid; please login first.")
+        return render_template('login.html')
+
+@app.route('/room/<roomID>', methods=["GET", "POST"])
+def room(roomID):
+    conn = dbconn2.connect(DSN)
+    # if GET
+    # just post all of the reviews for DAV265
+    if request.method == "GET":
+        reviews = functions.getRoomReviews(conn, roomID)
+        pictures = functions.getPicsForReviews(conn, roomID)
+        return render_template('room.html',roomID=roomID,reviews=reviews,pictures=pictures)
+
+    # if POST
+    # find the reviews for the room and display them
+    else:
+    	reviews = functions.getRoomReviews(conn, roomID)
+    	return render_template('room.html',roomID=roomID,reviews=reviews)
+
+# Displays reviews that a user has already made
+@app.route('/reviewedRooms/', methods=["GET", "POST"])
+def reviewedRooms():
+    conn = dbconn2.connect(DSN)
+    # username = request.cookies.get('username')
+    username = 'bji'
+    print username
+    if username is not None:
+        reviews = functions.getUserRoomReviews(conn, username)
+        return render_template('reviewedRooms.html', reviews=reviews, username=username)
+    else: # if there's no username found yet
+        flash("No userid; please login first.")
+        return render_template('login.html')
+
+# Displays form for a review on a specific room that the user has already made
+@app.route('/editRoom/<roomID>', methods=["GET", "POST"])
+def editRoom(roomID):
+    conn = dbconn2.connect(DSN)
+    # username = request.cookies.get('username')
+    username = 'bji'
+    print username
+    building = functions.getReshall(roomID[:3])
+    roomNum = roomID[3:6]
+    review = functions.getReview(conn, roomID)
+    review = review[0]['review']
+    roomIDs = functions.getRoomNums(conn);
+    if username is not None:
+        if request.method == "GET":
+            print("get method!")
+            return render_template("editForm.html", roomID=roomID, building=building, roomNum=roomNum, userreview=review)
+
+        else: # POST
+            print("post method!")
+            flooring = request.form['flooring']
+            review = request.form['review']
+            rating = request.form['overallRating']
+            print flooring
+            print review
+            print rating
+            functions.updateReview(conn, username, roomID, review, rating, flooring)
+            flash('Thanks for your review! The database has been updated.')
+            return redirect(url_for('reviewedRooms', roomIDs=roomIDs))
+    else: # if there's no username found yet
+        flash("No userid; please login first.")
+        return render_template('login.html')
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        # arg, if any, is the desired port number
+        port = int(sys.argv[1])
+        assert(port>1024)
+    else:
+        port = os.getuid()
+
+    DSN = dbconn2.read_cnf()
+    DSN['db'] = 'dormform_db'
+    app.debug = True
+    app.run('0.0.0.0',8001)
+    #app.debug = True
+    #app.run('0.0.0.0',os.getuid()+1)
+'''
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji
+functions.py
+'''
+
+# These functions do most of the work to query and update the
+# room review database.
+
+import sys
+import MySQLdb
+import dbconn2
+
+# ================================================================
+def getRoomNums(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT roomID from room')
+    return curs.fetchall()
+
+def newReview(conn, user, roomID, review, overallRating, flooring):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    defaultType = 'single' # change later
+    curs.execute('INSERT INTO review (reviewID, username, roomID, review, overallRating, flooring) VALUES (NULL, %s, %s, %s, %s, %s)', [user, roomID, review, overallRating, flooring])
+
+def updateReview(conn, user, roomID, review, overallRating, flooring):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    defaultType = 'single' # change later
+    print ("UPDATE REVIEW FUNCTION: " + review)
+    curs.execute('UPDATE review SET review=%s, overallRating=%s, flooring=%s WHERE roomID=%s', [review, overallRating, flooring, roomID])
+
+def checkFirstReview(conn, user, roomID):
+    print 'we here CHECK FIRST REVIEW'
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT * FROM review WHERE username=%s and roomID=%s',[user, roomID])
+    results = curs.fetchall()
+    return results
+
+def getRoomReviews(conn, roomID):
+	curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+	curs.execute('SELECT * FROM review WHERE roomID=%s',[roomID])
+	return curs.fetchall()
+
+def getUserRoomReviews(conn, username):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT * FROM review WHERE username=%s',[username])
+    return curs.fetchall()
+
+def getReshall(buildingID):
+    buildings = {'BAT':'Bates', 'BEB':'Beebe', 'CAZ':'Cazenove', 'CER':'Cervantes',
+    'CLA':'Claflin', 'DOW':'Dower', 'FRE':'Freeman', 'FHC':'French House', 'HEM':'Hemlock',
+    'LAK':'Lake House', 'MCA':'McAfee', 'MUN':'Munger', 'POM':'Pomeroy', 'SEV':'Severance',
+    'SHA':'Shafer', 'STO':'Stone', 'DAV':'Davis', 'TCE':'Tower Court East', 'TCW':'Tower Court West'}
+    reshall = buildings[buildingID]
+    return reshall
+
+def getReview(conn, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT review FROM review WHERE roomID = %s',[roomID])
+    return curs.fetchall()
+
+# gets the average rating for the room
+def updateAverageRating(conn, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('update room set avgRating=(select avg(overallRating) from review where roomID=%s) where roomID=%s',[roomID, roomID])
+
+# get the reviewID for the file upload
+def getReviewID(conn, username, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('select reviewID from review where username=%s and roomID=%s',[username, roomID])
+    return curs.fetchone()
+
+# inserts the picture filename into the database
+def insertPicName(conn, filename, reviewID, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('insert into picture values(null,%s,%s,%s)',[filename,reviewID,roomID])
+
+# get all pictures for a specific review
+def getPicsForReviews(conn, roomID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('select reviewID,pictureFile from picture where roomID=%s',[roomID])
+    return curs.fetchall()
+
+# get pathname of pictures to display for each room on the home page if the room has pictures
+def getPicsForThumbnails(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('select room.roomID,pictureFile from room inner join picture on room.roomID=picture.roomID')
+    results = curs.fetchall()
+    picData = {}
+    for result in results:
+        picData[result['roomID']] = 'static/images/' + result['pictureFile']
+    return picData
+
+<!-- 
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji  
+editRoom.html
+-->
+{% extends "home.html" %}
+
+{% block page_content %}
+<div id="wrapper">
+  <h2 style="font-family: 'Nunito', sans-serif;">Edit a Review for {{building}} {{roomNum}}</h2>
+  <div id="content">
+   <form method="POST" action="{{url_for('editRoom', roomID=roomID)}}">
+        
+        <p style="color:black; font-family: 'Nunito', sans-serif;">
+        <label for="flooring">Flooring:</label>
+        <select name="flooring">
+          <option value = "Wood" SELECTED>Wood</option>
+          <option value = "Carpet" SELECTED>Carpet</option>
+          <option value = "Linoleum" SELECTED>Linoleum</option>
+        </select>
+        <br>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">
+        <label for="overallRating">Give your room an overal rating:</label>
+        <br>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">
+        <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
+        <input type="radio" name="overallRating" value="2"> 2<br>
+        <input type="radio" name="overallRating" value="3"> 3<br>
+        <input type="radio" name="overallRating" value="4"> 4<br>
+        <input type="radio" name="overallRating" value="5"> 5 <br>
+        <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30">{{userreview}}</textarea><br>
+
+
+  <p><input type="submit" name="submit-btn" value="Submit Review">
+    </form>
+</div>
+{% endblock %}
+
+<!--
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji
+home.html
+-->
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <title>DormForm</title>
+    <link type="text/css" rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+<body>
+
+    {% block header %}
+    <header>
+        <h1><a href="/">DormForm</a></h1>
+        <a href="{{url_for('newReview')}}"><button type="button">Leave a Review</button></a>
+        <a href="{{url_for('reviewedRooms')}}"><button type="button">Your Reviews</button></a>
+    </header>
+    {% endblock %}
+
+    {% block page_content %}
+    <div class="grid"></div>
+
+    <div id="sidebar">
+        <form>
+        <h2>Filter Rooms</h2>
+            <label>Dormitory</label>
+            <select name="building">
+                <option value=""></option>
+                <!-- hard coded for now, for the beta version it should be results from the database -->
+                <option value="Bates">Bates</option>
+                <option value="Davis">Davis</option>
+                <option value="Shafer">Shafer</option>
+            </select>
+            <!-- <label>Flooring</label>
+            <select name="flooring">
+                <option value=""></option>
+                <option value="Linoleum">Linoleum</option>
+                <option value="Wood">Wood</option>
+                <option value="Carpet">Carpet</option>
+            </select> -->
+            <label>Rating</label>
+            <div id="radios">
+                <input type="radio" name="avgRating" value=1><p>1</p>
+                <input type="radio" name="avgRating" value=2><p>2</p>
+                <input type="radio" name="avgRating" value=3><p>3</p>
+                <input type="radio" name="avgRating" value=4><p>4</p>
+                <input type="radio" name="avgRating" value=5><p>5</p>
+            </div>
+            <button id='submitBtn' type="button">Submit</button>
+        <p id="noFilter"><p>
+        </form>
+    </div>
+
+    <script>
+
+        //get the width of the scrollbar as it subtracts from the calculated display area
+        function scrollbarWidth() {
+            var div = $('<div style="width:50px;height:50px;overflow:hidden;position:absolute;top:-200px;left:-200px;"><div style="height:100px;"></div>');
+            // Append our div, do our calculation and then remove it
+            $('body').append(div);
+            var w1 = $('div', div).innerWidth();
+            div.css('overflow-y', 'scroll');
+            var w2 = $('div', div).innerWidth();
+            $(div).remove();
+            return (w1 - w2);
+        }
+
+        //set width of grid area
+        $('.grid').width($(window).width()-270-scrollbarWidth());
+
+        function createThumbNail(roomID,url,imgUrl="{{url_for('static', filename='room_example.jpeg')}}"){
+            var thumbNail = $('<div>').addClass('thumbNail');
+            //get width of each thumbNail
+            //ideally make responsive layout that resizes thumbnails upon window resize
+            //^save for beta
+            var width =($('.grid').width()-15*5-8)/4; //(grid_width-thumbNail_margin*numDiv+1)/numDiv
+            thumbNail.width(width);
+            thumbNail.height(width*5/4);
+            //add image
+            var imgContainer = $('<div>').addClass('imgContainer'); //need to hide image overflow
+            var img = $('<img>').attr('src',imgUrl);
+            imgContainer.height(width);
+            img.height(width); //only works for landscape images
+            img.on('load', function(){ //center image within container
+              img.css('left',-(img.width()-width)/2);  //only works for landscape images
+            });
+            imgContainer.append(img);
+            thumbNail.append(imgContainer);
+
+            //add room title
+            var title = $('<a>').attr('href',url)
+                                .text(roomID);
+            thumbNail.append(title);
+            return thumbNail;
+        }
+
+        //Create thumbnails for each room
+        {% for room in roomsData %}
+            {% if room.roomID in picData%}
+                $('.grid').append(createThumbNail("{{room.roomID}}", "{{url_for('room', roomID=room.roomID)}}","{{picData[room.roomID]}}"));
+            {% else %}
+                $('.grid').append(createThumbNail("{{room.roomID}}", "{{url_for('room', roomID=room.roomID)}}"));
+            {% endif %}
+        {% endfor %}
+
+        $('#submitBtn').click(function(){
+            $('#noFilter').text('');
+            var data = $('form').serialize();
+            // console.log(data);
+            $.get("{{url_for('sortRooms')}}",
+            data,
+            resultsGrid,
+            'json')
+            .fail(errorHandler)
+        });
+
+        //updates the main display grid with the results of the user's query
+        function resultsGrid(response){
+            // console.log(response);
+            $('.grid').empty();
+            if(response.length==0){
+                var noResults = $('<h2>').text("No rooms matched your query")
+                $('.grid').append(noResults);
+            }
+            else{
+                for(i=0;i<response.length;i++){
+                    $('.grid').append(createThumbNail(response[i].roomID, response[i].url,response[i].image));
+                }
+            }
+        }
+
+        //tells the user to choose at least one filter before submitting the form
+        function errorHandler(error){
+            $('#noFilter').text('Please select at least one filter.');
+            //test change test change
+        }
+
+    </script>
+    {% endblock %}
+
+</body>
+</html>
+
+<!-- 
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji  
+reviewedRooms.html
+-->
+
+{% extends 'home.html' %}
+
+  {% block page_content %}
+
+  <div id="room">
+    <h1></h1>
+  </div>
+
+  <div id="wrapper">
+  <h2 style="font-family: 'Nunito', sans-serif;">Rooms reviewed by {{username}}</h2>
+
+    <div id="sidebar"></div>
+    <div id="content">
+
+        <div id="flashes">
+
+          {% with messages = get_flashed_messages() %}
+          {% if messages %}
+          <ul style="list-style-type: none; color:red", class=flashes>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        {% endwith %}
+        </div>
+
+  <section id="room_review">
+      <table style="font-family: 'Nunito', sans-serif;" id="room_review_table">
+          <tr><th>Room Number</th><th>Review</th><th>Rating</th><th>Flooring</th></tr>
+          {% for review in reviews %}
+          <tr class="review_row">
+        <td class="roomNum">{{review['roomID']}}</td>    
+        <td class="review">{{review['review']}}</td>
+        <td class="rating">{{review['overallRating']}}</td>
+        <td class="flooring">{{review['flooring']}}</td>
+        <!-- <td class="edit"><a href="{{url_for('editRoom', roomID=review['roomID'], username='bji', review=review['reviewID'])}}"><button type="button">Edit Review</button></a></td> -->
+        <td class="edit"><a href="{{url_for('editRoom', roomID=review['roomID'])}}"><button type="button">Edit Review</button></a></td>
+          </tr>
+          {% endfor %}
+      </table>
+  </section>
+    </div>
+
+  {% endblock %}
+
+<!--
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji
+reviewForm.html
+-->
+{% extends "home.html" %}
+
+{% block page_content %}
+
+<div id="wrapper">
+
+    <!-- <p> A form for writing reviews for dorms at Wellesley College -->
+        <div id="content">
+            <form method="POST" action="/newReview/" enctype="multipart/form-data">
+                <!-- <label for="reshalls">Residence Halls (will be implemented later!!)</label> <br> -->
+                <!--         <select name="reshalls" id="reshallsdropdown">
+                <option value="none" selected = "selected">Choose One</option>
+                {% for reshall in reshalls %}
+                <option value = "{{reshall}}" SELECTED>{{reshall}}</option>
+                {% endfor %}
+            </select> -->
+            <p style="color:black; font-family: 'Nunito', sans-serif;">
+                <label for="roomIDs">Available Rooms So Far:</label><br>
+                <select name="roomIDs">
+                    <option value="none" selected = "selected">Choose One</option>
+                    {% for room in roomIDs %}
+                    <option value = {{room['roomID']}} SELECTED>{{room['roomID']}}</option>
+                    {% endfor %}
+                </select><br>
+
+                <p style="color:black; font-family: 'Nunito', sans-serif;">
+                    <label for="flooring">Flooring:</label>
+                    <select name="flooring">
+                        <option value = "Wood" SELECTED>Wood</option>
+                        <option value = "Carpet" SELECTED>Carpet</option>
+                        <option value = "Linoleum" SELECTED>Linoleum</option>
+                    </select><br>
+
+                    <p style="color:black; font-family: 'Nunito', sans-serif;">
+                        <label for="overallRating">Give your room an overall rating:</label><br>
+
+                        <p style="color:black;">
+                            <input type="radio" name="overallRating" value="1" checked="checked"> 1<br>
+                            <input type="radio" name="overallRating" value="2"> 2<br>
+                            <input type="radio" name="overallRating" value="3"> 3<br>
+                            <input type="radio" name="overallRating" value="4"> 4<br>
+                            <input type="radio" name="overallRating" value="5"> 5<br>
+
+                            <p style="color:black; font-family: 'Nunito', sans-serif;">Review: <br><textarea name="review" rows="5" cols="30"></textarea><br>
+
+                            <p><label style="color:black; font-family: 'Nunito', sans-serif;" for="pic">Pic: <input type="file" name="pic"></label></p> <br>
+                            <p><input type="submit" name="submit-btn" value="Submit Review">
+            </form>
+        </div>
+</div>
+                        <div id="flashes">
+                            {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                            <ul style="list-style-type: none; color:red", class=flashes>
+                                {% for message in messages %}
+                                <li>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+{% endblock %}
+
+<!--
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji
+room.html
+-->
+
+{% extends 'home.html' %}
+
+<!-- delete later -->
+<head>
+    <meta charset="utf-8">
+    <title>DormForm</title>
+    <link type="text/css" rel="stylesheet" href="../static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+<!-- end of delete later -->
+
+	{% block page_content %}
+	<div id="room">
+		<h1>{{roomID}} Room Review</h1>
+	</div>
+    <div id="content">
+
+        <div id="flashes">
+
+            {% with messages = get_flashed_messages() %}
+          {% if messages %}
+          <ul style="list-style-type: none; color:red", class=flashes>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        {% endwith %}
+        </div>
+  <section id="room_review">
+      <table id="room_review_table">
+          <tr><th>Review</th><th>Rating</th><th>Picture</th></tr>
+          {% for review in reviews %}
+          <tr class="review_row" id="{{review['reviewID']}}">
+    	  <td class="review">{{review['review']}}</td>
+    	  <td class="rating">{{review['overallRating']}}</td>
+        <td class="picture">
+
+          <div class="w3-content w3-display-container">
+            {% for picture in pictures %}
+            {% if picture['reviewID'] == review['reviewID'] %}
+            <a target="_blank" href="{{url_for('static',filename='images/'+picture['pictureFile'])}}">
+              <img class="dormPics" src="../static/images/{{picture['pictureFile']}}" width="300" height="200">
+            </a>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+            <button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
+            <button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
+
+
+	          </div>
+        </td>
+          </tr>
+
+
+<!-- test data, delete after testing -->
+
+				<tr class="review_row">
+			<td class="review_td">'what a great room, wowow'</td>
+			<td class="rating">5</td>
+			<td class="pictures">
+				<div class="w3-content w3-display-container">
+					<a target="_blank" href="../static/room_example.jpg">
+  					<img class="dormPics" src="../static/room_example.jpg" width="300" height="200">
+					</a>
+					<a target="_blank" href="../static/room_example.jpg">
+  					<img class="dormPics" src="../static/room_example.jpeg" width="300" height="200">
+					</a>
+
+
+  				<button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
+  				<button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
+				</div>
+			<!--
+				<a href="../static/room_example.jpg">
+    			<img src="../static/room_example.jpg" alt="room_example" width="300" height="200">
+  			</a>
+				<a target="_blank" href="../static/room_example.jpeg">
+    			<img src="../static/room_example.jpeg" alt="room_example" width="300" height="200">
+  			</a>
+			</td>
+		-->
+				</tr>
+
+				<tr class="review_row">
+			<td class="review_td">'not the best'</td>
+			<td class="rating">3</td>
+				</tr>
+
+				<tr class="review_row">
+			<td class="review_td">'can't stand it!'</td>
+			<td class="rating">1</td>
+				</tr>
+
+<!-- end of test data -->
+
+      </table>
+  </section>
+    </div>
+
+<script>
+// for the slideshow
+
+var slideIndex = 1;
+showDivs(slideIndex);
+
+function plusDivs(n) {
+  showDivs(slideIndex += n);
+}
+
+function showDivs(n) {
+  var i;
+  var x = document.getElementsByClassName("dormPics");
+  if (n > x.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = x.length}
+  for (i = 0; i < x.length; i++) {
+     x[i].style.display = "none";
+  }
+  x[slideIndex-1].style.display = "block";
+}
+</script>
+
+	{% endblock %}
+/*
+CS304 Final Project: DormForm
+Midori Yang, Lauren Futami, and Brenda Ji
+style.css
+*/
+
+body{
+    padding: 0;
+    margin: 0;
+}
+
+<!-- 
+CS304 Final Project: Dorm Form
+Midori Yang, Lauren Futami and Brenda Ji  
+style.css
+-->
+/*------- HEADER STYLING -------*/
+header{
+    z-index: 100;
+    background-color: #fff;
+    border-bottom: 1px solid #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+header h1{
+    margin: 0;
+    top: 0;
+    left: 0;
+    display: inline-block;
+}
+
+header h1 a{
+    font-family: 'Nunito', sans-serif;
+    left: 0;
+    margin: 20px 0px 20px 20px; /*top, right, bottom, left*/
+    color: #000;
+    font-size: 50px;
+    text-decoration: none;
+    -webkit-transition: color 0.2s ease-in;
+}
+
+header h1 a:hover{
+    color: #999999;
+}
+
+header button{
+    background-color:#000;
+    border: none;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    display: inline-block;
+    border-radius: 4px;
+    float: right;
+    margin: 15px 15px 0px 0px; /*top, right, bottom, left*/
+    cursor: pointer;
+    -webkit-transition: background-color 0.2s ease-in;
+}
+header button:hover{
+    background-color:#999999;
+}
+
+#sidebar{
+    background-color: #000;
+    width: 270px;
+    height: 100%;
+    position: fixed;
+    top: 70px;
+    right: 0;
+    font-family: 'Nunito', sans-serif;
+}
+#sidebar h2{
+    text-align: center;
+    color: #fff;
+}
+#sidebar label{
+    color: #fff;
+    margin-left: 20px;
+}
+#sidebar select{
+    width: 230px;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+#sidebar input[type=radio],p{
+    color: #fff;
+    display: inline;
+}
+#sidebar #noFilter{
+    text-align: center;
+    color: #fff;
+    display: block;
+}
+#sidebar #radios{
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+#sidebar #submitBtn{
+    background-color:#000;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    color: #fff;
+    padding: 10px;
+    display: block;
+    float: center;
+    font-size: 15px;
+    cursor: pointer;
+    -webkit-transition: background-color 0.2s ease-in;
+    margin: 0 auto;
+}
+#sidebar #submitBtn:hover{
+    background-color:#fff;
+    color: #000;
+}
+
+.grid {
+    margin-top: 70px;
+}
+/*adding a bunch of fade animations so that we know the elements are actually reloading
+and the code is executing; visual feedback*/
+@keyframes fadeIn { /*for Internet Explorer*/
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+@-webkit-keyframes fadeIn { /*for Chrome, Safari*/
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+@-moz-keyframes fadeIn { /*Firefox*/
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+.grid h2{
+    text-align: center;
+    color: #999999;
+    font-family: 'Nunito', sans-serif;
+    animation-name: fadeIn;
+    animation-duration: 0.5s;
+    -webkit-animation-name: fadeIn;
+    -webkit-animation-duration: 0.5s;
+    -moz-animation-name: fadeIn;
+    -moz-animation-duration: 0.5s;
+}
+.grid .thumbNail {
+    margin: 0px 0px 15px 15px;
+    float: left;
+    background-color: #fff;
+    color: #fff;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #000;
+    animation-name: fadeIn;
+    animation-duration: 0.5s;
+    -webkit-animation-name: fadeIn;
+    -webkit-animation-duration: 0.5s;
+    -moz-animation-name: fadeIn;
+    -moz-animation-duration: 0.5s;
+}
+.imgContainer {
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+.imgContainer img{
+    position: relative;
+}
+.thumbNail a{
+    font-family: 'Nunito', sans-serif;
+    font-size: 20px;
+    color: #000;
+    text-decoration: none;
+    -webkit-transition: background-color 0.1s ease-in,
+    color 0.1s ease-in;
+    margin-left: 15px;
+}
+.thumbNail a:hover{
+    color: #999999;
+}
+
+#wrapper {
+    margin-top: 70px;
+}
+
+#room_review_table tr:nth-child(even) {
+  border-collapse: collapse;
+  background-color: #f2f2f2;
+}
+
+.w3-button w3-black w3-display-left {
+  display: inline-block;
+  width: 200px;
+  padding: 8px;
+  color: #fff;
+  border: 1px solid #fff;
+  text-align: center;
+  outline: none;
+  text-decoration: none;
+}
