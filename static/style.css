@@ -10,7 +10,7 @@ body{
 }
 
 /*------- HEADER STYLING -------*/
-header{
+header{ /*70px tall usually */
     z-index: 100;
     background-color: #fff;
     border-bottom: 1px solid #fff;
@@ -21,24 +21,24 @@ header{
 }
 
 header h1{
-    margin: 0;
     top: 0;
     left: 0;
     display: inline-block;
+    margin: 7px 0px 7px 10px; /*top, right, bottom, left*/
 }
 
 header h1 a{
     font-family: 'Nunito', sans-serif;
-    left: 0;
-    margin: 20px 0px 20px 20px; /*top, right, bottom, left*/
     color: #000;
     font-size: 50px;
     text-decoration: none;
     -webkit-transition: color 0.2s ease-in;
+    font-weight: bold;
 }
 
 header h1 a:hover{
     color: #999999;
+    text-decoration: none;
 }
 
 header button{
@@ -67,50 +67,58 @@ header button:hover{
     position: fixed;
     top: 70px;
     right: 0;
-    font-family: 'Nunito', sans-serif;
+}
+#sidebar form{
+    display: flex;
+    flex-direction: column;
+}
+#sidebar form>*{
+    margin-bottom: 20px;
+    margin-left: 20px;
 }
 #sidebar h2{
     text-align: center;
     color: #fff;
+    font-family: 'Nunito', sans-serif;
 }
 #sidebar label{
     color: #fff;
-    margin-left: 20px;
+    font-size: 16px;
+    font-weight: normal;
+}
+#sidebar label :not(p){
+    color: #000;
+    font-weight: normal;
 }
 #sidebar select{
     width: 230px;
-    margin-left: 20px;
-    margin-bottom: 20px;
 }
 #sidebar input[type=radio],p{
     color: #fff;
     display: inline;
+    font-family: 'Nunito', sans-serif;
 }
-#sidebar #noFilter{
-    text-align: center;
-    color: #fff;
-    display: block;
+#sidebar #buttons{
+    margin: auto;
 }
-#sidebar #radios{
-    margin-left: 20px;
-    margin-bottom: 20px;
-}
-#sidebar #submitBtn{
+#sidebar button{
     background-color:#000;
     border: 1px solid #fff;
     border-radius: 4px;
     color: #fff;
     padding: 10px;
-    display: block;
-    float: center;
     font-size: 15px;
     cursor: pointer;
     -webkit-transition: background-color 0.2s ease-in;
-    margin: 0 auto;
+
 }
-#sidebar #submitBtn:hover{
+#sidebar button:hover{
     background-color:#fff;
     color: #000;
+}
+#sidebar #noFilter{
+    text-align: center;
+    color: #fff;
 }
 
 .grid {
@@ -142,10 +150,10 @@ and the code is executing; visual feedback*/
     -moz-animation-duration: 0.5s;
 }
 .grid .thumbNail {
+    position: relative;
     margin: 0px 0px 15px 15px;
     float: left;
     background-color: #fff;
-    color: #fff;
     font-size: 18px;
     border-radius: 5px;
     border: 1px solid #000;
@@ -164,16 +172,47 @@ and the code is executing; visual feedback*/
 .imgContainer img{
     position: relative;
 }
-.thumbNail a{
+.thumbNail p{
+    color: #000;
     font-family: 'Nunito', sans-serif;
     font-size: 20px;
     color: #000;
     text-decoration: none;
-    -webkit-transition: background-color 0.1s ease-in,
-    color 0.1s ease-in;
     margin-left: 15px;
 }
+.thumbNail a{ /* taken from: http://jsfiddle.net/mrivasa/TK69d/ */
+  /* all rules required to make the whole div clickable */
+  position:absolute;
+  width:100%;
+  height:100%;
+  top:0;
+  left: 0;
+  z-index: 1;
+  /* this is a fix for IE7-9 */
+  background-color:#ffffff;
+  -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  opacity:0;
+}
 .thumbNail a:hover{
+    opacity: 0.6;
+}
+
+nav{
+    font-family: 'Nunito', sans-serif;
+    clear: left;
+    display: block;
+    font-size: 16px;
+}
+.pagination>li.active>a, .pagination>li.active>a:hover{
+    background-color: #000;
+    border-style: none;
+}
+.pagination>li>a{
+    color: #000;
+    border-style: none;
+}
+.pagination>li>a:hover{
     color: #999999;
 }
 

@@ -11,6 +11,8 @@ import imghdr # for image upload
 import MySQLdb
 import dbconn2
 import functions
+from math import ceil
+import json
 
 
 from flask import Flask, render_template, make_response, request, redirect, url_for, session, send_from_directory, flash, jsonify
@@ -33,35 +35,46 @@ def home():
     #display all the rooms on the home page
     if request.method=='GET':
         conn = dbconn2.connect(DSN)
-        roomsData = functions.getRoomNums(conn)
-        picData = functions.getPicsForThumbnails(conn)
-        print picData
-        return render_template('home.html', roomsData = roomsData, picData = picData)
+        dormData = functions.getDorms(conn) #get dict of dorm building names
+        roomsData = functions.getDataForThumbnails(conn, functions.getRoomIDs(conn)) #get tuple of dicts of each room and corresponding url and images
+        roomsDataJSON = json.dumps(roomsData)
+        return render_template('home.html', dormData = dormData,
+                                            numPages = ceil(len(roomsData)/float(12)),
+                                            roomsData = roomsDataJSON,
+                                            )
 
-@app.route('/sortRooms/', methods=['GET'])
-def sortRooms():
+#AJAX route to return results for search query
+@app.route('/searchRooms/', methods=['GET'])
+def searchRooms():
     #display all the rooms that match the query on the home page
     if request.method=='GET':
         #query may have one or more arguments, must account for variable number of arguments
-        query = 'SELECT roomID FROM room WHERE'
-        #add corresponding column name for every query field
-        for key in request.args.keys():
-            if not request.args[key] == '':
-                query = query + ' {}=%s AND'.format(key);
-        query = query[:-4] #slice off the last AND
-        #take out any empty arguments from the query parameters
-        args = [x for x in request.args.values() if x!='']
-        conn = dbconn2.connect(DSN)
-        curs = conn.cursor(MySQLdb.cursors.DictCursor)
-        curs.execute(query, args)
-        results = curs.fetchall()
-        picData = functions.getPicsForThumbnails(conn)
-        #add the url and pathname with which to build the thumbnails for each room
-        for result in results:
-            result['url'] = url_for('room',roomID=result['roomID'])
-            if result['roomID'] in picData:
-                result['image'] = picData[result['roomID']]
-        return jsonify(results);
+        #list of form field names
+        allowed = 'building avgRating'.split()
+        #check if request args are safe
+        for key in request.args:
+            if key not in allowed:
+                print 'oh no'
+        else:
+            query = 'SELECT roomID FROM room WHERE '
+            str=[]
+            for key in request.args:
+                if not request.args[key] == '':
+                    if key=='avgRating':
+                        #handle possibility of decimal ratings
+                        str.append('ROUND({},0)=%s'.format(key))
+                    else:
+                        str.append('{}=%s'.format(key))
+            query = query + ' AND '.join(str)
+            #take out any empty arguments from the query parameters
+            args = [x for x in request.args.values() if x!='']
+            print 'original query: ', query
+            conn = dbconn2.connect(DSN)
+            curs = conn.cursor(MySQLdb.cursors.DictCursor)
+            curs.execute(query, args)
+            results = curs.fetchall()
+            roomsData = functions.getDataForThumbnails(conn, results)
+            return jsonify(roomsData);
 
 @app.route('/newReview/', methods=["GET", "POST"])
 def newReview():

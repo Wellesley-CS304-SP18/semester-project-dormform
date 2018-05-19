@@ -10,11 +10,17 @@ functions.py
 import sys
 import MySQLdb
 import dbconn2
+from flask import url_for
 
 # ================================================================
-def getRoomNums(conn):
+def getRoomIDs(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
     curs.execute('SELECT roomID from room')
+    return curs.fetchall()
+
+def getDorms(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor) # results as Dictionaries
+    curs.execute('SELECT DISTINCT building FROM room ORDER BY building')
     return curs.fetchall()
 
 def newReview(conn, user, roomID, review, overallRating, flooring):
@@ -81,11 +87,20 @@ def getPicsForReviews(conn, roomID):
     return curs.fetchall()
 
 # get pathname of pictures to display for each room on the home page if the room has pictures
-def getPicsForThumbnails(conn):
+def getDataForThumbnails(conn,rooms):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('select room.roomID,pictureFile from room inner join picture on room.roomID=picture.roomID')
+    #get photos
+    curs.execute('select room.roomID,pictureFile from room inner join picture on room.roomID=picture.roomID group by roomID')
     results = curs.fetchall()
     picData = {}
+    #restructure results for easy searching
+    #instead of ({roomID: roomID, pictureFile: pictureFile},...)
+    #do {roomID: pictureFile,...}
     for result in results:
         picData[result['roomID']] = 'static/images/' + result['pictureFile']
-    return picData
+    #append room page url and image path (if exists) to rooms
+    for room in rooms:
+        room['url'] = url_for('room',roomID=room['roomID'])
+        if room['roomID'] in picData:
+            room['image'] = picData[room['roomID']]
+    return rooms
